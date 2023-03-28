@@ -1,9 +1,9 @@
 extern crate frug;
 
 fn main() {
-    let update  = || {
-        print!("hello world");
+    let update_loop  = || {
+        // Your update code here
     };
 
-    frug::run("My window", update);
+    frug::run("My window", update_loop);
 }
