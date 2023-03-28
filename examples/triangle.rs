@@ -5,5 +5,5 @@ fn main() {
         print!("hello world");
     };
 
-    frug::init("My window", update);
+    frug::run("My window", update);
 }

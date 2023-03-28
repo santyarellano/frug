@@ -7,7 +7,7 @@ use winit::{
 };
 
 /// Starts running your project. 
-pub fn init<F: 'static + Fn()>(window_title: &str, window_loop: F) {
+pub fn run<F: 'static + Fn()>(window_title: &str, window_loop: F) {
     let event_loop = EventLoop::new();
     let window = Window::new(&event_loop).unwrap();
     window.set_title(window_title);
