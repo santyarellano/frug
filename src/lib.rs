@@ -6,7 +6,9 @@ use winit::{
     window::Window
 };
 
-/// Starts running your project. 
+/// Starts running your project, executing the loop you provide.
+/// * `window_title`    - The title for your window.
+/// * `window_loop`     - The loop you want to execute with each frame.
 pub fn run<F: 'static + Fn()>(window_title: &str, window_loop: F) {
     let event_loop = EventLoop::new();
     let window = Window::new(&event_loop).unwrap();
