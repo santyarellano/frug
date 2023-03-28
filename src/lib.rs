@@ -35,6 +35,10 @@ use winit::{
 /// frug::run("My Game", my_loop);
 /// ```
 pub fn run<F: 'static + Fn()>(window_title: &str, window_loop: F) {
+    // enable wgpu logging
+    env_logger::init();
+
+    // setup
     let event_loop = EventLoop::new();
     let window = Window::new(&event_loop).unwrap();
     window.set_title(window_title);
