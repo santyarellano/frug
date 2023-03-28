@@ -1,20 +1,36 @@
 //! This is the FRUG crate
 
+use winit::{
+    event::{Event, WindowEvent},
+    event_loop::{EventLoop, ControlFlow},
+    window::Window
+};
 
-/// This is the documentation of this function
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+/// Starts running your project. 
+pub fn init<F: 'static + Fn()>(window_title: &str, window_loop: F) {
+    let event_loop = EventLoop::new();
+    let window = Window::new(&event_loop).unwrap();
+    window.set_title(window_title);
 
+    event_loop.run(move |event, _, control_flow| {
+        *control_flow = ControlFlow::Wait;
 
-// = = = = = = = = = = = = = = = = = TESTS = = = = = = = = = = = = = = = = =
-#[cfg(test)]
-mod tests {
-    use super::*;
+        // Act on events
+        match event {
+            Event::WindowEvent {
+                ref event,
+                window_id,
+            } 
+            if window_id == window.id() => match event {
+                // Window events
+                WindowEvent::CloseRequested => {
+                    *control_flow = ControlFlow::Exit;
+                }
+                _ => ()
+            }
+            _ => (),
+        }
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+        window_loop();
+    });
 }
