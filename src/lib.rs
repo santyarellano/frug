@@ -1,4 +1,18 @@
-//! This is the FRUG crate
+//! FRUG is intended to provide a similar abstraction layer over graphics programming as to how SDL does for C++, meaning that it should provide developers enough control and flexibility to implement their own architectures & design patterns, yet simplifying the process of working with graphics so developers won't have to worry about implementing all the repetitive tasks related to getting things to the screen.
+//! 
+//! FRUG aims to include the following features (unchecked items are the ones still under development):
+//! - [x] Window management
+//! - [ ]  Loading & rendering textures
+//! - [ ]  Rotating textures
+//! - [ ]  Scaling textures
+//! - [ ]  Alpha blending for textures
+//! - [ ]  Choosing a specific backend (aka. Direct X, Metal, Vulkan, etc.)
+//! - [ ]  Writing and using custom shaders
+//! - [ ]  Handle window state events
+//! - [ ]  Handle Mouse input
+//! - [ ]  Handle Keyboard input
+//! - [ ]  Playing audio
+//! - [ ]  Configure audio
 
 use winit::{
     event::{Event, WindowEvent},
