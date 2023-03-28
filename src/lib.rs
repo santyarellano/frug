@@ -6,9 +6,20 @@ use winit::{
     window::Window
 };
 
-/// Starts running your project, executing the loop you provide.
-/// * `window_title`    - The title for your window.
-/// * `window_loop`     - The loop you want to execute with each frame.
+/// Starts running your project.
+/// 
+/// Should receive a string which will be the title for the window created. It should also receive a loop which will be the main loop for your game/app.
+/// * `window_title (&str)`         - The title for your window.
+/// * `window_loop (static Fn())`   - The loop you want to execute with each frame.
+/// 
+/// # Example:
+/// 
+/// ```
+/// let my_loop = || {
+///     // your code
+/// };
+/// frug::run("My Game", my_loop);
+/// ```
 pub fn run<F: 'static + Fn()>(window_title: &str, window_loop: F) {
     let event_loop = EventLoop::new();
     let window = Window::new(&event_loop).unwrap();
