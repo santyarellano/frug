@@ -14,11 +14,22 @@
 //! - [ ]  Playing audio
 //! - [ ]  Configure audio
 
+use wgpu::{
+    IndexFormat,
+    PrimitiveTopology,
+    ShaderSource
+};
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{EventLoop, ControlFlow},
     window::Window
 };
+
+pub struct Inputs<'a> {
+    pub source: ShaderSource<'a>,
+    pub topology: PrimitiveTopology,
+    pub strip_index_format: Option<IndexFormat>
+}
 
 /// Starts running your project.
 /// 
