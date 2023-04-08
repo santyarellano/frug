@@ -33,7 +33,7 @@ pub struct FrugInstance {
 
 impl FrugInstance {
     /// Creates a new instance of FrugInstance, instantiating the window, configuration, and the surface to draw in.
-    pub async fn new_instance(window_title: &str, event_loop: &EventLoop<()>) -> Self {
+    async fn new_instance(window_title: &str, event_loop: &EventLoop<()>) -> Self {
         // Enable wgpu logging
         env_logger::init();
 
@@ -94,7 +94,7 @@ impl FrugInstance {
     }
 
     /// Resize the canvas for our window given a new defined size.
-    pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+    fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
             self.size = new_size;
             self.config.width = new_size.width;
@@ -132,6 +132,19 @@ impl FrugInstance {
         output.present();
 
         Ok(())
+    }
+
+    /// Sets new background color.
+    /// 
+    /// Receives a wgpu color (you can create one using the `frug::create_color` method).
+    /// 
+    /// # Example
+    /// ```
+    /// let new_color = frug::create_color(0.2, 0.3, 0.4, 1.0);
+    /// my_frug_instance.set_background_color(new_color);
+    /// ```
+    pub fn set_background_color(&mut self, color: wgpu::Color) {
+        self.background_color = color;
     }
 }
 
