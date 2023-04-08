@@ -14,16 +14,10 @@
 //! - [ ]  Playing audio
 //! - [ ]  Configure audio
 
-use std::process::Output;
 
-use wgpu::{
-    IndexFormat,
-    PrimitiveTopology,
-    ShaderSource
-};
 use winit::{
     event::{Event, WindowEvent},
-    event_loop::{EventLoop, ControlFlow, self},
+    event_loop::{EventLoop, ControlFlow},
     window::Window
 };
 
@@ -34,10 +28,11 @@ pub struct FrugInstance {
     config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
     window: Window,
+    background_color: wgpu::Color
 }
 
 impl FrugInstance {
-    /// Creates a new instance of FrugInstance
+    /// Creates a new instance of FrugInstance, instantiating the window, configuration, and the surface to draw in.
     pub async fn new_instance(window_title: &str, event_loop: &EventLoop<()>) -> Self {
         // Enable wgpu logging
         env_logger::init();
@@ -46,6 +41,7 @@ impl FrugInstance {
         let window = Window::new(&event_loop).unwrap();
         window.set_title(window_title);
         let size = window.inner_size();
+        let background_color = wgpu::Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
 
@@ -93,10 +89,11 @@ impl FrugInstance {
             queue,
             config,
             size,
+            background_color
         }
     }
 
-    /// Resize the canvas for our window
+    /// Resize the canvas for our window given a new defined size.
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
             self.size = new_size;
@@ -123,9 +120,7 @@ impl FrugInstance {
                     view: &view, 
                     resolve_target: None, 
                     ops: wgpu::Operations { 
-                        load: wgpu::LoadOp::Clear(wgpu::Color { 
-                            r: 0.1, g: 0.2, b: 0.3, a: 1.0 
-                        }), 
+                        load: wgpu::LoadOp::Clear(self.background_color), 
                         store: true
                     }
                 })], 
@@ -206,3 +201,21 @@ pub fn run<F: 'static + Fn()>(window_title: &str, window_loop: F) {
         window_loop();
     });
 }
+
+/// Creates a color.
+/// Should receive in range from 0.0 - 1.0 the red, green, blue, and alpha channels.
+/// * `red (f64)`   - The red channel.
+/// * `green (f64)`   - The green channel.
+/// * `blue (f64)`   - The blue channel.
+/// * `alpha (f64)`   - The alpha channel.
+/// 
+/// # Example:
+/// 
+/// ```
+/// frug::create_color(0.1, 0.2, 0.3, 1.0);
+/// ```
+pub fn create_color(red: f64, green: f64, blue: f64, alpha: f64) -> wgpu::Color {
+    wgpu::Color { r: red, g: green, b: blue, a: alpha }
+}
+
+// EOF
