@@ -21,6 +21,8 @@ use winit::{
     window::Window
 };
 
+/// The Frug instance.
+/// Contains the surface in which we draw, the device we're using, the queue, the surface configuration, surface size, window, and background color.
 pub struct FrugInstance {
     surface: wgpu::Surface,
     device: wgpu::Device,
@@ -31,6 +33,7 @@ pub struct FrugInstance {
     background_color: wgpu::Color
 }
 
+/// Implementation of FrugInstance methods
 impl FrugInstance {
     /// Creates a new instance of FrugInstance, instantiating the window, configuration, and the surface to draw in.
     async fn new_instance(window_title: &str, event_loop: &EventLoop<()>) -> Self {
