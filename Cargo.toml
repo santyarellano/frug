@@ -11,3 +11,4 @@ winit = "0.28"
 env_logger = "0.10"
 pollster = "0.2"
 bytemuck = { version = "1.12", features = [ "derive" ] }
+image = { version = "0.24", default-features = false, features = ["png", "jpeg"] }

@@ -52,6 +52,7 @@ impl Vertex {
     }
 }
 
+
 // - - - - - TEST! - - - - -
 // We should remove this in the future so we can create these in frug usage.
 const VERTICES: &[Vertex] = &[
