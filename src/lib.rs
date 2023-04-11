@@ -25,9 +25,9 @@ use winit::{
 /// Vertex struct
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-struct Vertex {
-    position: [f32; 3],
-    color: [f32; 3]
+pub struct Vertex {
+    pub position: [f32; 3],
+    pub color: [f32; 3]
 }
 
 /// Implementation of Vertex methods
@@ -51,24 +51,6 @@ impl Vertex {
         }
     }
 }
-
-
-// - - - - - TEST! - - - - -
-// We should remove this in the future so we can create these in frug usage.
-const VERTICES: &[Vertex] = &[
-    Vertex { position: [-0.0868241, 0.49240386, 0.0], color: [0.5, 0.0, 0.5] },
-    Vertex { position: [-0.49513406, 0.06958647, 0.0], color: [0.5, 0.0, 0.5] },
-    Vertex { position: [-0.21918549, -0.44939706, 0.0], color: [0.5, 0.0, 0.5] },
-    Vertex { position: [0.35966998, -0.3473291, 0.0], color: [0.5, 0.0, 0.5] },
-    Vertex { position: [0.44147372, 0.2347359, 0.0], color: [0.5, 0.0, 0.5] },
-];
-
-const INDICES: &[u16] = &[
-    0, 1, 4,
-    1, 2, 4,
-    2, 3, 4
-];
-// - - - - - TEST! - - - - -
 
 /// The Frug instance.
 /// Contains the surface in which we draw, the device we're using, the queue, the surface configuration, surface size, window, background color, and render pipeline.
@@ -98,6 +80,8 @@ impl FrugInstance {
         window.set_title(window_title);
         let size = window.inner_size();
         let background_color = wgpu::Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
+        let vertices: &[Vertex] = &[];
+        let indices: &[u16] = &[];
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
 
@@ -184,17 +168,17 @@ impl FrugInstance {
 
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
-            contents: bytemuck::cast_slice(VERTICES),
+            contents: bytemuck::cast_slice(&vertices),
             usage: wgpu::BufferUsages::VERTEX
         });
 
         let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Index Buffer"),
-            contents: bytemuck::cast_slice(INDICES),
+            contents: bytemuck::cast_slice(&indices),
             usage: wgpu::BufferUsages::INDEX
         });
 
-        let num_indices = INDICES.len() as u32;
+        let num_indices = indices.len() as u32;
 
         Self {
             window,
@@ -285,7 +269,7 @@ impl FrugInstance {
 /// };
 /// frug::run("My Game", my_loop);
 /// ```
-pub fn run<F: 'static + Fn()>(window_title: &str, window_loop: F) {
+pub fn run<F: 'static + FnMut()>(window_title: &str, mut window_loop: F) {
     // setup
     let event_loop = EventLoop::new();
     let mut frug_instance = pollster::block_on( FrugInstance::new_instance(window_title, &event_loop));
