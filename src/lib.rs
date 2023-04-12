@@ -65,6 +65,8 @@ pub struct FrugInstance {
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
+    staging_vertices: Vec<Vertex>,
+    staging_indices: Vec<u16>,
     num_indices: u32
 }
 
@@ -191,6 +193,8 @@ impl FrugInstance {
             render_pipeline,
             vertex_buffer,
             index_buffer,
+            staging_vertices: Vec::new(),
+            staging_indices: Vec::new(),
             num_indices
         }
     }
@@ -238,6 +242,8 @@ impl FrugInstance {
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
 
+        self.clear_staging_buffers_data();
+
         Ok(())
     }
 
@@ -254,7 +260,7 @@ impl FrugInstance {
         self.background_color = color;
     }
 
-    pub fn update_buffers(&mut self, vertices: &[Vertex], indices: &[u16]) {
+    fn update_buffers(&mut self, vertices: &[Vertex], indices: &[u16]) {
         self.vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
             contents: bytemuck::cast_slice(&vertices),
@@ -268,6 +274,39 @@ impl FrugInstance {
         });
 
         self.num_indices = indices.len() as u32;
+    }
+
+    pub fn update_buffers_with_staging(&mut self) {
+        self.vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Vertex Buffer"),
+            contents: bytemuck::cast_slice(&self.staging_vertices),
+            usage: wgpu::BufferUsages::VERTEX
+        });
+
+        self.index_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Index Buffer"),
+            contents: bytemuck::cast_slice(&self.staging_indices),
+            usage: wgpu::BufferUsages::INDEX
+        });
+
+        self.num_indices = self.staging_indices.len() as u32;
+    }
+
+    /// Adds a set of vertices and indices to the staging data.
+    pub fn add_staging_indexed_vertices(&mut self, vertices: &[Vertex], indices: &[u16]) {
+
+        // update the indices to match the number of current vertices
+        let offset: u16 = self.staging_vertices.len() as u16;
+        for index in indices {
+            self.staging_indices.push(index + offset);
+        }
+
+        self.staging_vertices.extend(vertices);
+    }
+
+    pub fn clear_staging_buffers_data(&mut self) {
+        self.staging_vertices.clear();
+        self.staging_indices.clear();
     }
 }
 

@@ -39,7 +39,10 @@ fn main() {
             }
         }
 
-        instance.update_buffers(&vertices, &indices);
+        //instance.update_buffers(&vertices, &indices);
+        instance.clear_staging_buffers_data();
+        instance.add_staging_indexed_vertices(&vertices, &indices);
+        instance.update_buffers_with_staging();
     };
 
     frug::run("My Window", update_loop);
