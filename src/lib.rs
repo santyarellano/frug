@@ -271,16 +271,6 @@ impl FrugInstance {
     }
 }
 
-
-/// Inits your frug instance and event loop.
-/// TODO: document!!!
-pub fn init(window_title: &str) -> (FrugInstance, EventLoop<()>) {
-    let event_loop = EventLoop::new();
-    let frug_instance = pollster::block_on( FrugInstance::new_instance(window_title, &event_loop));
-
-    return (frug_instance, event_loop);
-}
-
 /// Starts running your project.
 /// 
 /// Should receive a string which will be the title for the window created. It should also receive a loop which will be the main loop for your game/app.
@@ -295,7 +285,11 @@ pub fn init(window_title: &str) -> (FrugInstance, EventLoop<()>) {
 /// };
 /// frug::run("My Game", my_loop);
 /// ```
-pub fn run<F: 'static + FnMut()>(mut frug_instance: FrugInstance, event_loop: EventLoop<()>, mut window_loop: F) {
+pub fn run<F: 'static + FnMut(&mut FrugInstance)>(window_title: &str, mut window_loop: F) {
+    // setup
+    let event_loop = EventLoop::new();
+    let mut frug_instance = pollster::block_on( FrugInstance::new_instance(window_title, &event_loop));
+
     // Run the loop
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
@@ -340,7 +334,7 @@ pub fn run<F: 'static + FnMut()>(mut frug_instance: FrugInstance, event_loop: Ev
             _ => (),
         }
 
-        window_loop();
+        window_loop(&mut frug_instance);
     });
 }
 
