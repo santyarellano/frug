@@ -253,6 +253,32 @@ impl FrugInstance {
     pub fn set_background_color(&mut self, color: wgpu::Color) {
         self.background_color = color;
     }
+
+    pub fn update_buffers(&mut self, vertices: &[Vertex], indices: &[u16]) {
+        self.vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Vertex Buffer"),
+            contents: bytemuck::cast_slice(&vertices),
+            usage: wgpu::BufferUsages::VERTEX
+        });
+
+        self.index_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Index Buffer"),
+            contents: bytemuck::cast_slice(&indices),
+            usage: wgpu::BufferUsages::INDEX
+        });
+
+        self.num_indices = indices.len() as u32;
+    }
+}
+
+
+/// Inits your frug instance and event loop.
+/// TODO: document!!!
+pub fn init(window_title: &str) -> (FrugInstance, EventLoop<()>) {
+    let event_loop = EventLoop::new();
+    let frug_instance = pollster::block_on( FrugInstance::new_instance(window_title, &event_loop));
+
+    return (frug_instance, event_loop);
 }
 
 /// Starts running your project.
@@ -269,11 +295,7 @@ impl FrugInstance {
 /// };
 /// frug::run("My Game", my_loop);
 /// ```
-pub fn run<F: 'static + FnMut()>(window_title: &str, mut window_loop: F) {
-    // setup
-    let event_loop = EventLoop::new();
-    let mut frug_instance = pollster::block_on( FrugInstance::new_instance(window_title, &event_loop));
-
+pub fn run<F: 'static + FnMut()>(mut frug_instance: FrugInstance, event_loop: EventLoop<()>, mut window_loop: F) {
     // Run the loop
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;

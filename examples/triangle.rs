@@ -18,13 +18,13 @@ const INDICES: &[u16] = &[
 // - - - - - TEST! - - - - -
 
 fn main() {
-    let mut cnt = 0;
+    let (mut frug_instance, event_loop) = frug::init("My window");
+
+    frug_instance.update_buffers(VERTICES, INDICES);
 
     let update_loop  = move || {
         // Your update code here
-        println!("{cnt}");
-        cnt += 1;
     };
 
-    frug::run("My window", update_loop);
+    frug::run(frug_instance, event_loop, update_loop);
 }
