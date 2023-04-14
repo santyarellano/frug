@@ -15,7 +15,7 @@
 //! - [ ]  Configure audio
 
 
-use wgpu::util::DeviceExt;
+use wgpu::{util::DeviceExt};
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{EventLoop, ControlFlow},
@@ -260,22 +260,7 @@ impl FrugInstance {
         self.background_color = color;
     }
 
-    fn update_buffers(&mut self, vertices: &[Vertex], indices: &[u16]) {
-        self.vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Vertex Buffer"),
-            contents: bytemuck::cast_slice(&vertices),
-            usage: wgpu::BufferUsages::VERTEX
-        });
-
-        self.index_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Index Buffer"),
-            contents: bytemuck::cast_slice(&indices),
-            usage: wgpu::BufferUsages::INDEX
-        });
-
-        self.num_indices = indices.len() as u32;
-    }
-
+    /// Updates the vertex and index buffers with the staging data.
     pub fn update_buffers_with_staging(&mut self) {
         self.vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
@@ -307,6 +292,26 @@ impl FrugInstance {
     pub fn clear_staging_buffers_data(&mut self) {
         self.staging_vertices.clear();
         self.staging_indices.clear();
+    }
+
+    /// Adds a rectangle to the staging data.
+    /// Receives:
+    /// * `x (f32)`         - The x origin of the rectangle.
+    /// * `y (f32)`         - The y origin of the rectangle.
+    /// * `w (f32)`         - The width of the rectangle.
+    /// * `h (f32)`         - The height of the rectangle.
+    /// * `color ([f32; 3]) - An array [red, green, blue] describing the color components of the rectangle.
+    pub fn add_rectangle(&mut self, x: f32, y: f32, w: f32, h: f32, color: [f32; 3]) {
+        self.add_staging_indexed_vertices(
+            &[
+            Vertex { position: [x, y, 0.0], color },
+            Vertex { position: [x, y-h, 0.0], color },
+            Vertex { position: [x+w, y-h, 0.0], color },
+            Vertex { position: [x+w, y, 0.0], color },
+        ], &[
+            0, 1, 3,
+            1, 2, 3,
+        ]);
     }
 }
 
