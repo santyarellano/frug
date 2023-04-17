@@ -4,9 +4,11 @@ extern crate frug;
 
 fn main() {
 
+    let (frug_instance, event_loop) = frug::new("My Window");
+
     let mut x = 0.0;
 
-    let update_loop  = move |instance: &mut FrugInstance| {
+    let update_function  = move |instance: &mut FrugInstance| {
 
         instance.clear_staging_buffers_data();
         instance.add_rectangle(x, 0.0, 0.5, 0.5, [0.0, 0.5, 0.5]);
@@ -15,5 +17,5 @@ fn main() {
         x += 0.001;
     };
     
-    frug::run("My Window", update_loop);
+    frug_instance.run(event_loop, update_function);
 }

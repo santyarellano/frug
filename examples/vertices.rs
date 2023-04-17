@@ -4,6 +4,8 @@ extern crate frug;
 
 fn main() {
 
+    let (frug_instance, event_loop) = frug::new("My Window");
+
     // Docs here...
     let mut vertices= [
         frug::Vertex { position: [-0.0868241, 0.49240386, 0.0], color: [0.5, 0.0, 0.5] },
@@ -21,7 +23,7 @@ fn main() {
 
     let mut col = [0.0, 0.0, 0.0];
 
-    let update_loop  = move |instance: &mut FrugInstance| {
+    let update_function  = move |instance: &mut FrugInstance| {
         
         vertices[0].color = [col[0], col[1], col[2]];
         vertices[1].color = [col[1], col[0], col[2]];
@@ -44,5 +46,5 @@ fn main() {
         instance.update_buffers_with_staging();
     };
 
-    frug::run("My Window", update_loop);
+    frug_instance.run(event_loop, update_function);
 }

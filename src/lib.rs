@@ -313,6 +313,72 @@ impl FrugInstance {
             1, 2, 3,
         ]);
     }
+
+    /// Loads a texture
+    pub fn load_texture(&mut self, img_bytes: &[u8]) {
+    }
+
+    /// Starts running the loop
+    pub fn run<F: 'static + FnMut(&mut FrugInstance)>(mut self, event_loop: EventLoop<()>, mut update_function: F) {
+
+        // Run the loop
+        event_loop.run(move |event, _, control_flow| {
+            *control_flow = ControlFlow::Wait;
+            
+            // Act on events
+            match event {
+                Event::WindowEvent {
+                    ref event,
+                    window_id,
+                } 
+                // Window events
+                if window_id == self.window.id() => match event {
+                    // Close
+                    WindowEvent::CloseRequested => {
+                        *control_flow = ControlFlow::Exit;
+                    },
+                    
+                    // Resize
+                    WindowEvent::Resized(physical_size) => {
+                        self.resize(*physical_size);
+                    },
+                    WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                        self.resize(**new_inner_size);
+                    }
+                    
+                    _ => ()
+                }
+                Event::RedrawRequested(window_id) if window_id == self.window.id() => {
+                    // frug_instance.update();
+                    match self.render() {
+                        Ok(_) => {}
+                        // Reconfigure the surface if lost
+                        Err(wgpu::SurfaceError::Lost) => self.resize(self.size),
+                        // The system is out of memory, we should probably quit
+                        Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
+                        // All other errors should be resolved by the next frame
+                        Err(e) => eprintln!("{:?}", e),
+                    }
+                }
+                Event::MainEventsCleared => {
+                    self.window.request_redraw();
+                    // update function could go here
+                }
+                _ => (),
+            }
+
+            update_function(&mut self);
+        });
+    }
+}
+
+/// Inits your frug instance and your event loop.
+/// Returns a pair containing a FrugInstance and an EventLoop.
+pub fn new(window_title: &str) -> (FrugInstance, EventLoop<()>) {
+    let event_loop = EventLoop::new();
+    let frug_instance = pollster::block_on( FrugInstance::new_instance(window_title, &event_loop));
+
+    return (frug_instance, event_loop);
 }
 
 /// Starts running your project.
@@ -329,10 +395,10 @@ impl FrugInstance {
 /// };
 /// frug::run("My Game", my_loop);
 /// ```
-pub fn run<F: 'static + FnMut(&mut FrugInstance)>(window_title: &str, mut window_loop: F) {
+/*pub fn run<F: 'static + FnMut(&mut FrugInstance)>(window_title: &str, mut window_loop: F) {
     // setup
     let event_loop = EventLoop::new();
-    let mut frug_instance = pollster::block_on( FrugInstance::new_instance(window_title, &event_loop));
+    let mut frug_instance = pollster::block_on( FrugInstance::new_instance(window_title, event_loop));
 
     // Run the loop
     event_loop.run(move |event, _, control_flow| {
@@ -381,6 +447,7 @@ pub fn run<F: 'static + FnMut(&mut FrugInstance)>(window_title: &str, mut window
         window_loop(&mut frug_instance);
     });
 }
+*/
 
 /// Creates a color.
 /// Should receive in range from 0.0 - 1.0 the red, green, blue, and alpha channels.
