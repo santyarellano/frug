@@ -14,7 +14,7 @@
 //! - [ ]  Playing audio
 //! - [ ]  Configure audio
 
-
+use image::{GenericImage, GenericImageView};
 use wgpu::{util::DeviceExt};
 use winit::{
     event::{Event, WindowEvent},
@@ -316,6 +316,9 @@ impl FrugInstance {
 
     /// Loads a texture
     pub fn load_texture(&mut self, img_bytes: &[u8]) {
+        let diffuse_img = image::load_from_memory(img_bytes).unwrap();
+        let diffuse_rgba = diffuse_img.to_rgba8();
+        let dimensions = diffuse_img.dimensions();
     }
 
     /// Starts running the loop
