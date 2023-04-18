@@ -14,7 +14,7 @@
 //! - [ ]  Playing audio
 //! - [ ]  Configure audio
 
-use image::{GenericImage, GenericImageView};
+use image::{GenericImageView};
 use wgpu::{util::DeviceExt};
 use winit::{
     event::{Event, WindowEvent},
@@ -27,7 +27,7 @@ use winit::{
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {
     pub position: [f32; 3],
-    pub color: [f32; 3]
+    pub text_coords: [f32; 2]
 }
 
 /// Implementation of Vertex methods
@@ -45,7 +45,7 @@ impl Vertex {
                 wgpu::VertexAttribute {
                     offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 1,
-                    format: wgpu::VertexFormat::Float32x3
+                    format: wgpu::VertexFormat::Float32x2
                 }
             ] 
         }
@@ -68,6 +68,7 @@ pub struct FrugInstance {
     staging_vertices: Vec<Vertex>,
     staging_indices: Vec<u16>,
     num_indices: u32,
+    texture_bind_group_layout: wgpu::BindGroupLayout,
     diffuse_bind_groups: Vec<wgpu::BindGroup>
 }
 
@@ -127,9 +128,33 @@ impl FrugInstance {
 
         let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
 
+        // we use this to load textures
+        let texture_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor { 
+                label: Some("texture_bind_group_layout"), 
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture { 
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true }, 
+                            view_dimension: wgpu::TextureViewDimension::D2, 
+                            multisampled: false 
+                        },
+                        count: None
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None
+                    }
+                ]
+            });
+
         let render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("Render Pipeline Layout"),
-            bind_group_layouts: &[],
+            bind_group_layouts: &[&texture_bind_group_layout],
             push_constant_ranges: &[]
         });
 
@@ -197,6 +222,7 @@ impl FrugInstance {
             staging_vertices: Vec::new(),
             staging_indices: Vec::new(),
             num_indices,
+            texture_bind_group_layout,
             diffuse_bind_groups: Vec::new()
         }
     }
@@ -236,6 +262,12 @@ impl FrugInstance {
             });
 
             render_pass.set_pipeline(&self.render_pipeline);
+
+            for i in 0..self.diffuse_bind_groups.len() {
+                render_pass.set_bind_group(i as u32, &self.diffuse_bind_groups[i], &[]);
+            }
+
+            
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
             render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
@@ -303,13 +335,15 @@ impl FrugInstance {
     /// * `w (f32)`         - The width of the rectangle.
     /// * `h (f32)`         - The height of the rectangle.
     /// * `color ([f32; 3]) - An array [red, green, blue] describing the color components of the rectangle.
-    pub fn add_rectangle(&mut self, x: f32, y: f32, w: f32, h: f32, color: [f32; 3]) {
+    pub fn add_rectangle(&mut self, x: f32, y: f32, w: f32, h: f32, texture_index: u16) {
+
+        // TODO: We should update these text_coords to match the actual coordinates.
         self.add_staging_indexed_vertices(
             &[
-            Vertex { position: [x, y, 0.0], color },
-            Vertex { position: [x, y-h, 0.0], color },
-            Vertex { position: [x+w, y-h, 0.0], color },
-            Vertex { position: [x+w, y, 0.0], color },
+            Vertex { position: [x, y, 0.0], text_coords: [0.0, 0.0] },
+            Vertex { position: [x, y-h, 0.0], text_coords: [0.0, 1.0] },
+            Vertex { position: [x+w, y-h, 0.0], text_coords: [1.0, 1.0] },
+            Vertex { position: [x+w, y, 0.0], text_coords: [1.0, 0.0] },
         ], &[
             0, 1, 3,
             1, 2, 3,
@@ -368,33 +402,10 @@ impl FrugInstance {
             ..Default::default()
         });
 
-        let texture_bind_group_layout =
-            self.device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor { 
-                label: Some("texture_bind_group_layout"), 
-                entries: &[
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Texture { 
-                            sample_type: wgpu::TextureSampleType::Float { filterable: true }, 
-                            view_dimension: wgpu::TextureViewDimension::D2, 
-                            multisampled: false 
-                        },
-                        count: None
-                    },
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 1,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                        count: None
-                    }
-                ]
-            });
-
         let diffuse_bind_group = self.device.create_bind_group(
             &wgpu::BindGroupDescriptor { 
                 label: Some("diffuse_bind_group"), 
-                layout: &texture_bind_group_layout, 
+                layout: &self.texture_bind_group_layout, 
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,
