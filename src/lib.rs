@@ -14,7 +14,6 @@
 //! - [ ]  Playing audio
 //! - [ ]  Configure audio
 
-use image::{GenericImageView};
 use wgpu::{util::DeviceExt};
 use winit::{
     event::{Event, WindowEvent},
@@ -445,75 +444,6 @@ pub fn new(window_title: &str) -> (FrugInstance, EventLoop<()>) {
 
     return (frug_instance, event_loop);
 }
-
-/// Starts running your project.
-/// 
-/// Should receive a string which will be the title for the window created. It should also receive a loop which will be the main loop for your game/app.
-/// * `window_title (&str)`         - The title for your window.
-/// * `window_loop (static Fn())`   - The loop you want to execute with each frame.
-/// 
-/// # Example:
-/// 
-/// ```
-/// let my_loop = || {
-///     // your code
-/// };
-/// frug::run("My Game", my_loop);
-/// ```
-/*pub fn run<F: 'static + FnMut(&mut FrugInstance)>(window_title: &str, mut window_loop: F) {
-    // setup
-    let event_loop = EventLoop::new();
-    let mut frug_instance = pollster::block_on( FrugInstance::new_instance(window_title, event_loop));
-
-    // Run the loop
-    event_loop.run(move |event, _, control_flow| {
-        *control_flow = ControlFlow::Wait;
-
-        // Act on events
-        match event {
-            Event::WindowEvent {
-                ref event,
-                window_id,
-            } 
-            // Window events
-            if window_id == frug_instance.window.id() => match event {
-                // Close
-                WindowEvent::CloseRequested => {
-                    *control_flow = ControlFlow::Exit;
-                },
-
-                // Resize
-                WindowEvent::Resized(physical_size) => {
-                    frug_instance.resize(*physical_size);
-                },
-                WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                    frug_instance.resize(**new_inner_size);
-                }
-                _ => ()
-            }
-            Event::RedrawRequested(window_id) if window_id == frug_instance.window.id() => {
-                // frug_instance.update();
-                match frug_instance.render() {
-                    Ok(_) => {}
-                    // Reconfigure the surface if lost
-                    Err(wgpu::SurfaceError::Lost) => frug_instance.resize(frug_instance.size),
-                    // The system is out of memory, we should probably quit
-                    Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
-                    // All other errors should be resolved by the next frame
-                    Err(e) => eprintln!("{:?}", e),
-                }
-            }
-            Event::MainEventsCleared => {
-                frug_instance.window.request_redraw();
-            }
-            _ => (),
-        }
-
-        window_loop(&mut frug_instance);
-    });
-}
-*/
-
 /// Creates a color.
 /// Should receive in range from 0.0 - 1.0 the red, green, blue, and alpha channels.
 /// * `red (f64)`   - The red channel.
