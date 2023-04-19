@@ -277,8 +277,6 @@ impl FrugInstance {
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
 
-        self.clear_staging_buffers_data();
-
         Ok(())
     }
 
@@ -296,7 +294,7 @@ impl FrugInstance {
     }
 
     /// Updates the vertex and index buffers with the staging data.
-    pub fn update_buffers_with_staging(&mut self) {
+    pub fn update_buffers(&mut self) {
         self.vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
             contents: bytemuck::cast_slice(&self.staging_vertices),
@@ -324,7 +322,8 @@ impl FrugInstance {
         self.staging_vertices.extend(vertices);
     }
 
-    pub fn clear_staging_buffers_data(&mut self) {
+    /// Clears the staging buffers data so the next frame is empty.
+    pub fn clear(&mut self) {
         self.staging_vertices.clear();
         self.staging_indices.clear();
     }
@@ -336,7 +335,7 @@ impl FrugInstance {
     /// * `w (f32)`         - The width of the rectangle.
     /// * `h (f32)`         - The height of the rectangle.
     /// * `color ([f32; 3]) - An array [red, green, blue] describing the color components of the rectangle.
-    pub fn add_rectangle(&mut self, x: f32, y: f32, w: f32, h: f32, texture_index: u16) {
+    pub fn add_text_rect(&mut self, x: f32, y: f32, w: f32, h: f32, texture_index: u16) {
 
         // TODO: We should update these text_coords to match the actual coordinates.
         //      NOTE: Maybe this is correct as it is.
