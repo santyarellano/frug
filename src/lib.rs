@@ -32,6 +32,16 @@ pub struct Vertex {
     pub color: [f32; 3]
 }
 
+impl Default for Vertex {
+    fn default() -> Self {
+        Vertex { 
+            position: [0.0, 0.0, 0.0], 
+            text_coords: [0.0, 0.0], 
+            color: [1.0, 1.0, 1.0] 
+        }
+    }
+}
+
 /// Implementation of Vertex methods
 impl Vertex {
     fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
