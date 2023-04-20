@@ -49,16 +49,19 @@ impl Vertex {
             array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress, 
             step_mode: wgpu::VertexStepMode::Vertex, 
             attributes: &[
+                // position
                 wgpu::VertexAttribute {
                     offset: 0,
                     shader_location: 0,
                     format: wgpu::VertexFormat::Float32x3
                 },
+                // text coords
                 wgpu::VertexAttribute {
                     offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 1,
                     format: wgpu::VertexFormat::Float32x2
                 },
+                // color
                 wgpu::VertexAttribute {
                     offset: std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
                     shader_location: 2,
@@ -171,7 +174,7 @@ impl FrugInstance {
 
         let render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("Render Pipeline Layout"),
-            bind_group_layouts: &[&texture_bind_group_layout, &texture_bind_group_layout],
+            bind_group_layouts: &[&texture_bind_group_layout],
             push_constant_ranges: &[]
         });
 
@@ -264,30 +267,37 @@ impl FrugInstance {
             label: Some("Render Encoder")
         });
 
-        {
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor { 
-                label: Some("Render Pass"), 
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view, 
-                    resolve_target: None, 
-                    ops: wgpu::Operations { 
-                        load: wgpu::LoadOp::Clear(self.background_color), 
-                        store: true
-                    }
-                })], 
-                depth_stencil_attachment: None
-            });
+        for i in 0..self.diffuse_bind_groups.len() {
+            {
+                let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor { 
+                    label: Some("Render Pass"), 
+                    color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                        view: &view, 
+                        resolve_target: None, 
+                        ops: wgpu::Operations { 
+                            load: wgpu::LoadOp::Load, //Clear(self.background_color), 
+                            store: true
+                        }
+                    })], 
+                    depth_stencil_attachment: None
+                });
+    
+                render_pass.set_pipeline(&self.render_pipeline);
+    
+                /*for i in 0..self.diffuse_bind_groups.len() {
+                    render_pass.set_bind_group(i as u32, &self.diffuse_bind_groups[i], &[]);
+                }*/
 
-            render_pass.set_pipeline(&self.render_pipeline);
+                render_pass.set_bind_group(0, &self.diffuse_bind_groups[i], &[]);
+                
+                render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+                render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
 
-            for i in 0..self.diffuse_bind_groups.len() {
-                render_pass.set_bind_group(i as u32, &self.diffuse_bind_groups[i], &[]);
+                // we use offsets of 6
+                let low_idx = (i*6) as u32;
+                let hi_idx = low_idx + 6;
+                render_pass.draw_indexed(low_idx..hi_idx, 0, 0..1);
             }
-
-            
-            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
         }
 
         self.queue.submit(std::iter::once(encoder.finish()));
