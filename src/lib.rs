@@ -28,7 +28,8 @@ mod texture;
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {
     pub position: [f32; 3],
-    pub text_coords: [f32; 2]
+    pub text_coords: [f32; 2],
+    pub color: [f32; 3]
 }
 
 /// Implementation of Vertex methods
@@ -47,6 +48,11 @@ impl Vertex {
                     offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 1,
                     format: wgpu::VertexFormat::Float32x2
+                },
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
+                    shader_location: 2,
+                    format: wgpu::VertexFormat::Float32x3
                 }
             ] 
         }
@@ -328,13 +334,13 @@ impl FrugInstance {
         self.staging_indices.clear();
     }
 
-    /// Adds a rectangle to the staging data.
+    /// Adds a rectangle to the staging data using a texture.
     /// Receives:
-    /// * `x (f32)`         - The x origin of the rectangle.
-    /// * `y (f32)`         - The y origin of the rectangle.
-    /// * `w (f32)`         - The width of the rectangle.
-    /// * `h (f32)`         - The height of the rectangle.
-    /// * `color ([f32; 3]) - An array [red, green, blue] describing the color components of the rectangle.
+    /// * `x (f32)`             - The x origin of the rectangle.
+    /// * `y (f32)`             - The y origin of the rectangle.
+    /// * `w (f32)`             - The width of the rectangle.
+    /// * `h (f32)`             - The height of the rectangle.
+    /// * `texture_index (u16)` - The index of the texture we're drawing.
     pub fn add_text_rect(&mut self, x: f32, y: f32, w: f32, h: f32, texture_index: u16) {
 
         // TODO: We should update these text_coords to match the actual coordinates.
@@ -342,10 +348,34 @@ impl FrugInstance {
         // TODO: We should be able to choose which texture this rect is using.
         self.add_staging_indexed_vertices(
             &[
-            Vertex { position: [x, y, 0.0], text_coords: [0.0, 0.0] },
-            Vertex { position: [x, y-h, 0.0], text_coords: [0.0, 1.0] },
-            Vertex { position: [x+w, y-h, 0.0], text_coords: [1.0, 1.0] },
-            Vertex { position: [x+w, y, 0.0], text_coords: [1.0, 0.0] },
+            Vertex { position: [x, y, 0.0], text_coords: [0.0, 0.0], color: [1.0, 1.0, 1.0] },
+            Vertex { position: [x, y-h, 0.0], text_coords: [0.0, 1.0], color: [1.0, 1.0, 1.0] },
+            Vertex { position: [x+w, y-h, 0.0], text_coords: [1.0, 1.0], color: [1.0, 1.0, 1.0] },
+            Vertex { position: [x+w, y, 0.0], text_coords: [1.0, 0.0], color: [1.0, 1.0, 1.0] },
+        ], &[
+            0, 1, 3,
+            1, 2, 3,
+        ]);
+    }
+
+    /// Adds a rectangle to the staging data using a color description.
+    /// Receives:
+    /// * `x (f32)`         - The x origin of the rectangle.
+    /// * `y (f32)`         - The y origin of the rectangle.
+    /// * `w (f32)`         - The width of the rectangle.
+    /// * `h (f32)`         - The height of the rectangle.
+    /// * `color ([f32; 3]) - An array [red, green, blue] describing the color components of the rectangle.
+    pub fn add_rect(&mut self, x: f32, y: f32, w: f32, h: f32, color: [f32; 3]) {
+
+        // TODO: We should update these text_coords to match the actual coordinates.
+        //      NOTE: Maybe this is correct as it is.
+        // TODO: We should be able to choose which texture this rect is using.
+        self.add_staging_indexed_vertices(
+            &[
+            Vertex { position: [x, y, 0.0], text_coords: [0.0, 0.0], color },
+            Vertex { position: [x, y-h, 0.0], text_coords: [0.0, 1.0], color },
+            Vertex { position: [x+w, y-h, 0.0], text_coords: [1.0, 1.0], color },
+            Vertex { position: [x+w, y, 0.0], text_coords: [1.0, 0.0], color },
         ], &[
             0, 1, 3,
             1, 2, 3,
