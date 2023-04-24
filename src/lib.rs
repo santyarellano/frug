@@ -277,6 +277,8 @@ impl FrugInstance {
             label: Some("Render Encoder")
         });
 
+        // draw our objects
+        let mut render_pass_op = wgpu::LoadOp::Clear(self.background_color);
         for tex_obj in &self.textured_objects {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor { 
                 label: Some("Render Pass"), 
@@ -284,7 +286,7 @@ impl FrugInstance {
                     view: &view, 
                     resolve_target: None, 
                     ops: wgpu::Operations { 
-                        load: wgpu::LoadOp::Load, //Clear(self.background_color), 
+                        load: render_pass_op, 
                         store: true
                     }
                 })], 
@@ -303,35 +305,11 @@ impl FrugInstance {
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
 
             render_pass.draw_indexed(tex_obj.indices_low_pos..tex_obj.indices_hi_pos, 0, 0..1);
+            render_pass_op = wgpu::LoadOp::Load;
         }
 
-        // -- OLD --
-        /*for i in 0..self.diffuse_bind_groups.len() {
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor { 
-                label: Some("Render Pass"), 
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view, 
-                    resolve_target: None, 
-                    ops: wgpu::Operations { 
-                        load: wgpu::LoadOp::Load, //Clear(self.background_color), 
-                        store: true
-                    }
-                })], 
-                depth_stencil_attachment: None
-            });
-
-            render_pass.set_pipeline(&self.render_pipeline);
-
-            render_pass.set_bind_group(0, &self.diffuse_bind_groups[i], &[]);
-            
-            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-
-            // we use offsets of 6
-            let low_idx = (i*6) as u32;
-            let hi_idx = low_idx + 6;
-            render_pass.draw_indexed(low_idx..hi_idx, 0, 0..1);
-        }*/
+        // Clear objects
+        self.textured_objects.clear();
 
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
