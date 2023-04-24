@@ -23,6 +23,56 @@ use winit::{
 
 mod texture;
 
+#[rustfmt::skip]
+pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
+    1.0, 0.0, 0.0, 0.0, 
+    0.0, 1.0, 0.0, 0.0,
+    0.0, 0.0, 0.5, 0.0, 
+    0.0, 0.0, 0.5, 1.0
+);
+
+struct Camera {
+    eye: cgmath::Point3<f32>,
+    target: cgmath::Point3<f32>,
+    up: cgmath::Vector3<f32>,
+    aspect: f32,
+    fovy: f32,
+    znear: f32,
+    zfar: f32
+}
+
+impl Camera {
+    fn build_view_projection_matrix(&self) -> cgmath::Matrix4<f32> {
+        let view = cgmath::Matrix4::look_at_rh(self.eye, self.target, self.up);
+        let proj = cgmath::perspective(
+            cgmath::Deg(self.fovy), 
+            self.aspect, 
+            self.znear, 
+            self.zfar
+        );
+
+        return OPENGL_TO_WGPU_MATRIX * proj * view;
+    }
+}
+
+/// Our camera uniform to store the view projection matrix.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+struct CameraUniform {
+    view_proj: [[f32; 4]; 4]
+}
+
+impl CameraUniform {
+    fn new() -> Self {
+        use cgmath::SquareMatrix;
+        Self { view_proj: cgmath::Matrix4::identity().into() }
+    }
+
+    fn update_view_proj(&mut self, camera: &Camera) {
+        self.view_proj = camera.build_view_projection_matrix().into();
+    }
+}
+
 /// Vertex struct
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -98,7 +148,11 @@ pub struct FrugInstance {
     num_indices: u32,
     texture_bind_group_layout: wgpu::BindGroupLayout,
     diffuse_bind_groups: Vec<wgpu::BindGroup>,
-    textured_objects: Vec<TexturedObj>
+    textured_objects: Vec<TexturedObj>,
+    camera: Camera,
+    camera_uniform: CameraUniform,
+    camera_buffer: wgpu::Buffer,
+    camera_bind_group: wgpu::BindGroup
 }
 
 /// Implementation of FrugInstance methods
@@ -157,6 +211,59 @@ impl FrugInstance {
 
         let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
 
+        // Camera
+        let camera = Camera {
+            eye: (0.0, 1.0, 2.0).into(),
+            target: (0.0, 0.0, 0.0).into(),
+            up: cgmath::Vector3::unit_y(),
+            aspect: config.width as f32 / config.height as f32,
+            fovy: 45.0,
+            znear: 0.1,
+            zfar: 100.0
+        };
+
+        let mut camera_uniform = CameraUniform::new();
+        camera_uniform.update_view_proj(&camera);
+
+        let camera_buffer = device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor {
+                label: Some("Camera Buffer"),
+                contents: bytemuck::cast_slice(&[camera_uniform]),
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST
+            }
+        );
+
+        let camera_bind_group_layout = device.create_bind_group_layout(
+            &wgpu::BindGroupLayoutDescriptor {
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::VERTEX,
+                        ty: wgpu::BindingType::Buffer { 
+                            ty: wgpu::BufferBindingType::Uniform, 
+                            has_dynamic_offset: false, 
+                            min_binding_size: None 
+                        },
+                        count: None
+                    }
+                ],
+                label: Some("Camera bind group layout")
+            }
+        );
+
+        let camera_bind_group = device.create_bind_group(
+            &wgpu::BindGroupDescriptor {
+                layout: &camera_bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: camera_buffer.as_entire_binding()
+                    }
+                ],
+                label: Some("Camera bind group")
+            }
+        );
+
         // we use this to load textures
         let texture_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor { 
@@ -183,7 +290,10 @@ impl FrugInstance {
 
         let render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("Render Pipeline Layout"),
-            bind_group_layouts: &[&texture_bind_group_layout],
+            bind_group_layouts: &[
+                &texture_bind_group_layout,
+                &camera_bind_group_layout
+            ],
             push_constant_ranges: &[]
         });
 
@@ -253,7 +363,11 @@ impl FrugInstance {
             num_indices,
             texture_bind_group_layout,
             diffuse_bind_groups: Vec::new(),
-            textured_objects: Vec::new()
+            textured_objects: Vec::new(),
+            camera,
+            camera_uniform,
+            camera_buffer,
+            camera_bind_group
         }
     }
 
@@ -295,9 +409,17 @@ impl FrugInstance {
 
             render_pass.set_pipeline(&self.render_pipeline);
 
+            // texture bind group
             render_pass.set_bind_group(
                 0, 
                 &self.diffuse_bind_groups[tex_obj.bind_group_idx], 
+                &[]
+            );
+
+            // camera bind group
+            render_pass.set_bind_group(
+                1, 
+                &self.camera_bind_group, 
                 &[]
             );
 
@@ -488,6 +610,7 @@ pub fn new(window_title: &str) -> (FrugInstance, EventLoop<()>) {
 
     return (frug_instance, event_loop);
 }
+
 /// Creates a color.
 /// Should receive in range from 0.0 - 1.0 the red, green, blue, and alpha channels.
 /// * `red (f64)`   - The red channel.

@@ -19,7 +19,7 @@ fn main() {
         instance.add_text_rect(xpos - 0.0, 0.0, 0.5, 0.5, frog_text_idx);
         instance.update_buffers();
 
-        xpos += 0.001;
+        xpos += 0.0001;
     };
 
     frug_instance.run(event_loop, update_function);
