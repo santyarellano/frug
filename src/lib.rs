@@ -267,7 +267,7 @@ impl FrugInstance {
         }
     }
 
-    /// Render
+    /// Renders all textured objects based on data on buffers.
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
 
