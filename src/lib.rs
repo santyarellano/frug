@@ -28,16 +28,14 @@ mod texture;
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {
     pub position: [f32; 3],
-    pub text_coords: [f32; 2],
-    pub color: [f32; 3]
+    pub text_coords: [f32; 2]
 }
 
 impl Default for Vertex {
     fn default() -> Self {
         Vertex { 
             position: [0.0, 0.0, 0.0], 
-            text_coords: [0.0, 0.0], 
-            color: [1.0, 1.0, 1.0] 
+            text_coords: [0.0, 0.0]
         }
     }
 }
@@ -72,6 +70,16 @@ impl Vertex {
     }
 }
 
+/// Textured Object struct
+/// Contains:
+/// `n_indices (u8)`        - The number of indices the object holds.
+/// `bind_group_idx (u32)`  - The index of the bind group to use.
+struct TexturedObj {
+    indices_low_pos: u32,
+    indices_hi_pos: u32,
+    bind_group_idx: usize
+}
+
 /// The Frug instance.
 /// Contains the surface in which we draw, the device we're using, the queue, the surface configuration, surface size, window, background color, and render pipeline.
 pub struct FrugInstance {
@@ -89,7 +97,8 @@ pub struct FrugInstance {
     staging_indices: Vec<u16>,
     num_indices: u32,
     texture_bind_group_layout: wgpu::BindGroupLayout,
-    diffuse_bind_groups: Vec<wgpu::BindGroup>
+    diffuse_bind_groups: Vec<wgpu::BindGroup>,
+    textured_objects: Vec<TexturedObj>
 }
 
 /// Implementation of FrugInstance methods
@@ -243,7 +252,8 @@ impl FrugInstance {
             staging_indices: Vec::new(),
             num_indices,
             texture_bind_group_layout,
-            diffuse_bind_groups: Vec::new()
+            diffuse_bind_groups: Vec::new(),
+            textured_objects: Vec::new()
         }
     }
 
@@ -267,38 +277,61 @@ impl FrugInstance {
             label: Some("Render Encoder")
         });
 
-        for i in 0..self.diffuse_bind_groups.len() {
-            {
-                let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor { 
-                    label: Some("Render Pass"), 
-                    color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                        view: &view, 
-                        resolve_target: None, 
-                        ops: wgpu::Operations { 
-                            load: wgpu::LoadOp::Load, //Clear(self.background_color), 
-                            store: true
-                        }
-                    })], 
-                    depth_stencil_attachment: None
-                });
-    
-                render_pass.set_pipeline(&self.render_pipeline);
-    
-                /*for i in 0..self.diffuse_bind_groups.len() {
-                    render_pass.set_bind_group(i as u32, &self.diffuse_bind_groups[i], &[]);
-                }*/
+        for tex_obj in &self.textured_objects {
+            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor { 
+                label: Some("Render Pass"), 
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &view, 
+                    resolve_target: None, 
+                    ops: wgpu::Operations { 
+                        load: wgpu::LoadOp::Load, //Clear(self.background_color), 
+                        store: true
+                    }
+                })], 
+                depth_stencil_attachment: None
+            });
 
-                render_pass.set_bind_group(0, &self.diffuse_bind_groups[i], &[]);
-                
-                render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-                render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+            render_pass.set_pipeline(&self.render_pipeline);
 
-                // we use offsets of 6
-                let low_idx = (i*6) as u32;
-                let hi_idx = low_idx + 6;
-                render_pass.draw_indexed(low_idx..hi_idx, 0, 0..1);
-            }
+            render_pass.set_bind_group(
+                0, 
+                &self.diffuse_bind_groups[tex_obj.bind_group_idx], 
+                &[]
+            );
+
+            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+
+            render_pass.draw_indexed(tex_obj.indices_low_pos..tex_obj.indices_hi_pos, 0, 0..1);
         }
+
+        // -- OLD --
+        /*for i in 0..self.diffuse_bind_groups.len() {
+            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor { 
+                label: Some("Render Pass"), 
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &view, 
+                    resolve_target: None, 
+                    ops: wgpu::Operations { 
+                        load: wgpu::LoadOp::Load, //Clear(self.background_color), 
+                        store: true
+                    }
+                })], 
+                depth_stencil_attachment: None
+            });
+
+            render_pass.set_pipeline(&self.render_pipeline);
+
+            render_pass.set_bind_group(0, &self.diffuse_bind_groups[i], &[]);
+            
+            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+
+            // we use offsets of 6
+            let low_idx = (i*6) as u32;
+            let hi_idx = low_idx + 6;
+            render_pass.draw_indexed(low_idx..hi_idx, 0, 0..1);
+        }*/
 
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
@@ -361,41 +394,25 @@ impl FrugInstance {
     /// * `w (f32)`             - The width of the rectangle.
     /// * `h (f32)`             - The height of the rectangle.
     /// * `texture_index (u16)` - The index of the texture we're drawing.
-    pub fn add_text_rect(&mut self, x: f32, y: f32, w: f32, h: f32, texture_index: u16) {
+    pub fn add_text_rect(&mut self, x: f32, y: f32, w: f32, h: f32, texture_index: usize) {
+
+        // Add the object to the textured objects vector
+        let low_bound = self.staging_indices.len() as u32;
+        self.textured_objects.push(TexturedObj { 
+            indices_low_pos: low_bound,
+            indices_hi_pos: low_bound + 6,
+            bind_group_idx: texture_index 
+        });
 
         // TODO: We should update these text_coords to match the actual coordinates.
         //      NOTE: Maybe this is correct as it is.
         // TODO: We should be able to choose which texture this rect is using.
         self.add_staging_indexed_vertices(
             &[
-            Vertex { position: [x, y, 0.0], text_coords: [0.0, 0.0], color: [1.0, 1.0, 1.0] },
-            Vertex { position: [x, y-h, 0.0], text_coords: [0.0, 1.0], color: [1.0, 1.0, 1.0] },
-            Vertex { position: [x+w, y-h, 0.0], text_coords: [1.0, 1.0], color: [1.0, 1.0, 1.0] },
-            Vertex { position: [x+w, y, 0.0], text_coords: [1.0, 0.0], color: [1.0, 1.0, 1.0] },
-        ], &[
-            0, 1, 3,
-            1, 2, 3,
-        ]);
-    }
-
-    /// Adds a rectangle to the staging data using a color description.
-    /// Receives:
-    /// * `x (f32)`         - The x origin of the rectangle.
-    /// * `y (f32)`         - The y origin of the rectangle.
-    /// * `w (f32)`         - The width of the rectangle.
-    /// * `h (f32)`         - The height of the rectangle.
-    /// * `color ([f32; 3]) - An array [red, green, blue] describing the color components of the rectangle.
-    pub fn add_rect(&mut self, x: f32, y: f32, w: f32, h: f32, color: [f32; 3]) {
-
-        // TODO: We should update these text_coords to match the actual coordinates.
-        //      NOTE: Maybe this is correct as it is.
-        // TODO: We should be able to choose which texture this rect is using.
-        self.add_staging_indexed_vertices(
-            &[
-            Vertex { position: [x, y, 0.0], text_coords: [0.0, 0.0], color },
-            Vertex { position: [x, y-h, 0.0], text_coords: [0.0, 1.0], color },
-            Vertex { position: [x+w, y-h, 0.0], text_coords: [1.0, 1.0], color },
-            Vertex { position: [x+w, y, 0.0], text_coords: [1.0, 0.0], color },
+            Vertex { position: [x, y, 0.0], text_coords: [0.0, 0.0] },
+            Vertex { position: [x, y-h, 0.0], text_coords: [0.0, 1.0] },
+            Vertex { position: [x+w, y-h, 0.0], text_coords: [1.0, 1.0] },
+            Vertex { position: [x+w, y, 0.0], text_coords: [1.0, 0.0] },
         ], &[
             0, 1, 3,
             1, 2, 3,
