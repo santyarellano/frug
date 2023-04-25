@@ -9,14 +9,20 @@ fn main() {
     let img_bytes = include_bytes!("other_frog.png");
     let frog2_text_idx = frug_instance.load_texture(img_bytes);
 
+    let mut tex_to_use = frog_text_idx;
+
     let update_function =
         move |instance: &mut frug::FrugInstance, input: &winit_input_helper::WinitInputHelper| {
-            let mut tex_to_use = frog_text_idx;
-
             // Act on input
-            // We'll test our input by changing the frog we're using when we press space bar.
-            if input.key_held(frug::VirtualKeyCode::Space) {
-                tex_to_use = frog2_text_idx;
+            // We'll test our input by changing the frog we're using when we press space bar or mouse left click.
+            if input.mouse_pressed(frug::MouseButton::Left.into())
+                || input.key_pressed(frug::VirtualKeyCode::Space)
+            {
+                tex_to_use = if tex_to_use == frog_text_idx {
+                    frog2_text_idx
+                } else {
+                    frog_text_idx
+                }
             }
 
             // Draw

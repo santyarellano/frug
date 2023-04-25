@@ -16,7 +16,7 @@
 
 
 // Exported libs
-pub use winit::event::{VirtualKeyCode, MouseButton, KeyboardInput};
+pub use winit::event::{VirtualKeyCode, KeyboardInput};
 
 // Internal use
 use wgpu::{util::DeviceExt};
@@ -27,6 +27,19 @@ use winit::{
 };
 
 mod texture;
+
+pub enum MouseButton {
+    Left,
+    Right,
+    Middle,
+    Other
+}
+
+impl Into<usize> for MouseButton {
+    fn into(self) -> usize {
+        self as usize
+    }
+}
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
