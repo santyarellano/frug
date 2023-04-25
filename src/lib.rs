@@ -14,7 +14,11 @@
 //! - [ ]  Playing audio
 //! - [ ]  Configure audio
 
-pub use winit::event::VirtualKeyCode;
+
+// Exported libs
+pub use winit::event::{VirtualKeyCode, MouseButton, KeyboardInput};
+
+// Internal use
 use wgpu::{util::DeviceExt};
 use winit::{
     event::{Event, WindowEvent},
