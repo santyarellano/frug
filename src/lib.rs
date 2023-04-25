@@ -213,7 +213,7 @@ impl FrugInstance {
 
         // Camera
         let camera = Camera {
-            eye: (0.0, 1.0, 2.0).into(),
+            eye: (0.0, 0.0, 2.0).into(),
             target: (0.0, 0.0, 0.0).into(),
             up: cgmath::Vector3::unit_y(),
             aspect: config.width as f32 / config.height as f32,
@@ -439,6 +439,15 @@ impl FrugInstance {
         Ok(())
     }
 
+    fn input(&mut self, event: &WindowEvent) -> bool {
+        //todo!();
+        false
+    }
+
+    fn update(&mut self) {
+        //todo!();
+    }
+
     /// Sets new background color.
     /// 
     /// Receives a wgpu color (you can create one using the `frug::create_color` method).
@@ -549,11 +558,15 @@ impl FrugInstance {
     }
 
     /// Starts running the loop
-    pub fn run<F: 'static + FnMut(&mut FrugInstance)>(mut self, event_loop: EventLoop<()>, mut update_function: F) {
+    pub fn run<F: 'static + FnMut(&mut FrugInstance, &winit_input_helper::WinitInputHelper)>(mut self, event_loop: EventLoop<()>, mut update_function: F) {
+
+        let mut input = winit_input_helper::WinitInputHelper::new();
 
         // Run the loop
         event_loop.run(move |event, _, control_flow| {
             *control_flow = ControlFlow::Wait;
+
+            input.update(&event);
             
             // Act on events
             match event {
@@ -579,11 +592,11 @@ impl FrugInstance {
                     _ => ()
                 }
                 Event::RedrawRequested(window_id) if window_id == self.window.id() => {
-                    // frug_instance.update();
+                    self.update();
                     match self.render() {
                         Ok(_) => {}
                         // Reconfigure the surface if lost
-                        Err(wgpu::SurfaceError::Lost) => self.resize(self.size),
+                        Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => self.resize(self.size),
                         // The system is out of memory, we should probably quit
                         Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
                         // All other errors should be resolved by the next frame
@@ -592,12 +605,13 @@ impl FrugInstance {
                 }
                 Event::MainEventsCleared => {
                     self.window.request_redraw();
-                    // update function could go here
+
+                    update_function(&mut self, &input);
                 }
                 _ => (),
             }
 
-            update_function(&mut self);
+            
         });
     }
 }
