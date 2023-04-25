@@ -1,6 +1,3 @@
-use frug::FrugInstance;
-use winit::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
-
 extern crate frug;
 
 fn main() {
@@ -12,19 +9,20 @@ fn main() {
     let img_bytes = include_bytes!("other_frog.png");
     let frog2_text_idx = frug_instance.load_texture(img_bytes);
 
-    let mut xpos: f32 = 0.0;
-
     let update_function =
-        move |instance: &mut FrugInstance, event: &winit_input_helper::WinitInputHelper| {
+        move |instance: &mut frug::FrugInstance, input: &winit_input_helper::WinitInputHelper| {
+            let mut tex_to_use = frog_text_idx;
+
             // Act on input
+            // We'll test our input by changing the frog we're using when we press space bar.
+            if input.key_held(frug::VirtualKeyCode::Space) {
+                tex_to_use = frog2_text_idx;
+            }
 
             // Draw
             instance.clear();
-            instance.add_text_rect(xpos - 0.75, 0.0, 0.5, 0.5, frog2_text_idx);
-            instance.add_text_rect(xpos - 0.0, 0.0, 0.5, 0.5, frog_text_idx);
+            instance.add_text_rect(-0.25, 0.0, 0.5, 0.5, tex_to_use);
             instance.update_buffers();
-
-            xpos += 0.001;
         };
 
     frug_instance.run(event_loop, update_function);

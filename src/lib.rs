@@ -14,6 +14,7 @@
 //! - [ ]  Playing audio
 //! - [ ]  Configure audio
 
+pub use winit::event::VirtualKeyCode;
 use wgpu::{util::DeviceExt};
 use winit::{
     event::{Event, WindowEvent},
