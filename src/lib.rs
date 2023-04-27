@@ -17,6 +17,7 @@
 
 // Exported libs
 pub use winit::event::{VirtualKeyCode, KeyboardInput};
+pub use winit_input_helper::WinitInputHelper as InputHelper;
 
 // Internal use
 use wgpu::{util::DeviceExt};
@@ -457,11 +458,6 @@ impl FrugInstance {
         Ok(())
     }
 
-    fn input(&mut self, event: &WindowEvent) -> bool {
-        //todo!();
-        false
-    }
-
     fn update(&mut self) {
         //todo!();
     }
@@ -521,7 +517,7 @@ impl FrugInstance {
     /// * `w (f32)`             - The width of the rectangle.
     /// * `h (f32)`             - The height of the rectangle.
     /// * `texture_index (u16)` - The index of the texture we're drawing.
-    pub fn add_text_rect(&mut self, x: f32, y: f32, w: f32, h: f32, texture_index: usize) {
+    pub fn add_tex_rect(&mut self, x: f32, y: f32, w: f32, h: f32, texture_index: usize) {
 
         // Add the object to the textured objects vector
         let low_bound = self.staging_indices.len() as u32;
@@ -546,6 +542,16 @@ impl FrugInstance {
         ]);
     }
 
+    /// Adds a rectangle to the staging data using a texture.
+    /// Receives:
+    /// * `x (f32)`             - The x origin of the rectangle.
+    /// * `y (f32)`             - The y origin of the rectangle.
+    /// * `w (f32)`             - The width of the rectangle.
+    /// * `h (f32)`             - The height of the rectangle.
+    /// * `color [f32; 3]`      - The [red, green, blue] definition of the color to use.
+    pub fn add_colored_rect(&mut self, x: f32, y: f32, w: f32, h: f32, color: [f32; 3]) {
+
+    }
     /// Loads a texture
     pub fn load_texture(&mut self, img_bytes: &[u8]) -> usize {
         

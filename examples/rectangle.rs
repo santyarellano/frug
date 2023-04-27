@@ -7,9 +7,9 @@ fn main() {
 
     let mut x = 0.0;
 
-    let update_function = move |instance: &mut FrugInstance| {
+    let update_function = move |instance: &mut FrugInstance, _input: &frug::InputHelper| {
         instance.clear();
-        instance.add_rectangle(x, 0.0, 0.5, 0.5, [0.0, 0.5, 0.5]);
+        instance.add_colored_rect(x, 0.0, 0.5, 0.5, [0.0, 0.5, 0.5]);
         instance.update_buffers();
 
         x += 0.001;
