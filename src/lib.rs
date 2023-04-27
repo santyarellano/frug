@@ -2,15 +2,15 @@
 //! 
 //! FRUG aims to include the following features (unchecked items are the ones still under development):
 //! - [x] Window management
-//! - [ ]  Loading & rendering textures
+//! - [x]  Loading & rendering textures
 //! - [ ]  Rotating textures
-//! - [ ]  Scaling textures
+//! - [x]  Scaling textures
 //! - [ ]  Alpha blending for textures
 //! - [ ]  Choosing a specific backend (aka. Direct X, Metal, Vulkan, etc.)
 //! - [ ]  Writing and using custom shaders
 //! - [ ]  Handle window state events
-//! - [ ]  Handle Mouse input
-//! - [ ]  Handle Keyboard input
+//! - [x]  Handle Mouse input
+//! - [x]  Handle Keyboard input
 //! - [ ]  Playing audio
 //! - [ ]  Configure audio
 
@@ -550,7 +550,27 @@ impl FrugInstance {
     /// * `h (f32)`             - The height of the rectangle.
     /// * `color [f32; 3]`      - The [red, green, blue] definition of the color to use.
     pub fn add_colored_rect(&mut self, x: f32, y: f32, w: f32, h: f32, color: [f32; 3]) {
+        // Add the object to the textured objects vector
+        let low_bound = self.staging_indices.len() as u32;
+        self.textured_objects.push(TexturedObj { 
+            indices_low_pos: low_bound,
+            indices_hi_pos: low_bound + 6,
+            bind_group_idx: 0 
+        });
 
+        // TODO: We should update these text_coords to match the actual coordinates.
+        //      NOTE: Maybe this is correct as it is.
+        // TODO: We should be able to choose which texture this rect is using.
+        self.add_staging_indexed_vertices(
+            &[
+            Vertex { position: [x, y, 0.0], text_coords: [0.0, 0.0] },
+            Vertex { position: [x, y-h, 0.0], text_coords: [0.0, 1.0] },
+            Vertex { position: [x+w, y-h, 0.0], text_coords: [1.0, 1.0] },
+            Vertex { position: [x+w, y, 0.0], text_coords: [1.0, 0.0] },
+        ], &[
+            0, 1, 3,
+            1, 2, 3,
+        ]);
     }
     /// Loads a texture
     pub fn load_texture(&mut self, img_bytes: &[u8]) -> usize {
@@ -582,7 +602,7 @@ impl FrugInstance {
     }
 
     /// Starts running the loop
-    pub fn run<F: 'static + FnMut(&mut FrugInstance, &winit_input_helper::WinitInputHelper)>(mut self, event_loop: EventLoop<()>, mut update_function: F) {
+    pub fn run<F: 'static + FnMut(&mut FrugInstance, &InputHelper)>(mut self, event_loop: EventLoop<()>, mut update_function: F) {
 
         let mut input = winit_input_helper::WinitInputHelper::new();
 
