@@ -51,11 +51,15 @@ pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
     0.0, 0.0, 0.5, 1.0
 );
 
-struct Camera {
-    eye: cgmath::Point3<f32>,
-    target: cgmath::Point3<f32>,
-    up: cgmath::Vector3<f32>,
-    aspect: f32,
+/// Struct that defines the properties of our camera.
+/// The main components in here are:
+/// `eye (cgmath::Point3<f32>)`     - specifies where our camera is looking from.
+/// `target (cgmath::Point3<f32>)`  - specifies where our camera is looking at.
+pub struct Camera {
+    pub eye: cgmath::Point3<f32>,
+    pub target: cgmath::Point3<f32>,
+    pub up: cgmath::Vector3<f32>,
+    pub aspect: f32,
     fovy: f32,
     znear: f32,
     zfar: f32
@@ -169,7 +173,7 @@ pub struct FrugInstance {
     texture_bind_group_layout: wgpu::BindGroupLayout,
     diffuse_bind_groups: Vec<wgpu::BindGroup>,
     textured_objects: Vec<TexturedObj>,
-    camera: Camera,
+    pub camera: Camera,
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup
@@ -459,8 +463,10 @@ impl FrugInstance {
         Ok(())
     }
 
+    /// Updates some feaures of our frug instance, like the camera.
     fn update(&mut self) {
-        //todo!();
+        self.camera_uniform.update_view_proj(&self.camera);
+        self.queue.write_buffer(&self.camera_buffer, 0, bytemuck::cast_slice(&[self.camera_uniform]));
     }
 
     /// Sets new background color.
@@ -573,6 +579,7 @@ impl FrugInstance {
             1, 2, 3,
         ]);
     }
+    
     /// Loads a texture
     pub fn load_texture(&mut self, img_bytes: &[u8]) -> usize {
         

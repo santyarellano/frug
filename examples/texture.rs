@@ -24,6 +24,16 @@ fn main() {
             }
         }
 
+        // We'll also move our camera with left or right input
+        let speed = 0.01;
+        if input.key_held(frug::VirtualKeyCode::Right) {
+            instance.camera.eye.x -= speed;
+            instance.camera.target.x -= speed;
+        } else if input.key_held(frug::VirtualKeyCode::Left) {
+            instance.camera.eye.x += speed;
+            instance.camera.target.x += speed;
+        }
+
         // Draw
         instance.clear();
         instance.add_tex_rect(-0.25, 0.0, 0.5, 0.5, tex_to_use);
