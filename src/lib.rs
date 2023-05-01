@@ -133,7 +133,7 @@ impl Vertex {
                 },
                 // color
                 wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
+                    offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 2,
                     format: wgpu::VertexFormat::Float32x3,
                 },
@@ -163,7 +163,8 @@ pub struct FrugInstance {
     size: winit::dpi::PhysicalSize<u32>,
     window: Window,
     background_color: wgpu::Color,
-    render_pipeline: wgpu::RenderPipeline,
+    render_pipeline_textures: wgpu::RenderPipeline,
+    render_pipeline_colors: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
     staging_vertices: Vec<Vertex>,
@@ -243,7 +244,12 @@ impl FrugInstance {
         };
         surface.configure(&device, &config);
 
-        let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
+        // load texture shader (to use with textured vertices)
+        let shader_texture =
+            device.create_shader_module(wgpu::include_wgsl!("shader_texture.wgsl"));
+
+        // load color shader (to use with colored vertices)
+        let shader_color = device.create_shader_module(wgpu::include_wgsl!("shader_color.wgsl"));
 
         // Camera
         let camera = Camera {
@@ -289,7 +295,7 @@ impl FrugInstance {
             label: Some("Camera bind group"),
         });
 
-        // we use this to load textures
+        // we use this to load textures in a render pipeline
         let texture_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 label: Some("texture_bind_group_layout"),
@@ -313,48 +319,95 @@ impl FrugInstance {
                 ],
             });
 
-        let render_pipeline_layout =
+        // the render pipeline layout to use with textures.
+        let render_pipeline_textures_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
                 bind_group_layouts: &[&texture_bind_group_layout, &camera_bind_group_layout],
                 push_constant_ranges: &[],
             });
 
-        // our render pipeline
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Render Pipeline"),
-            layout: Some(&render_pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &shader,
-                entry_point: "vs_main",
-                buffers: &[Vertex::desc()],
-            },
-            fragment: Some(wgpu::FragmentState {
-                module: &shader,
-                entry_point: "fs_main",
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: config.format,
-                    blend: Some(wgpu::BlendState::REPLACE),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-            primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList,
-                strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Back),
-                unclipped_depth: false,
-                polygon_mode: wgpu::PolygonMode::Fill,
-                conservative: false,
-            },
-            depth_stencil: None,
-            multisample: wgpu::MultisampleState {
-                count: 1,
-                mask: !0,
-                alpha_to_coverage_enabled: false,
-            },
-            multiview: None,
-        });
+        // the render pipeline layout to use with colors.
+        let render_pipeline_colors_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("Render Pipeline Layout"),
+                bind_group_layouts: &[&camera_bind_group_layout],
+                push_constant_ranges: &[],
+            });
+
+        // our render pipeline to use with textures
+        let render_pipeline_textures =
+            device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                label: Some("Render Pipeline Textures"),
+                layout: Some(&render_pipeline_textures_layout),
+                vertex: wgpu::VertexState {
+                    module: &shader_texture,
+                    entry_point: "vs_main",
+                    buffers: &[Vertex::desc()],
+                },
+                fragment: Some(wgpu::FragmentState {
+                    module: &shader_texture,
+                    entry_point: "fs_main",
+                    targets: &[Some(wgpu::ColorTargetState {
+                        format: config.format,
+                        blend: Some(wgpu::BlendState::REPLACE),
+                        write_mask: wgpu::ColorWrites::ALL,
+                    })],
+                }),
+                primitive: wgpu::PrimitiveState {
+                    topology: wgpu::PrimitiveTopology::TriangleList,
+                    strip_index_format: None,
+                    front_face: wgpu::FrontFace::Ccw,
+                    cull_mode: Some(wgpu::Face::Back),
+                    unclipped_depth: false,
+                    polygon_mode: wgpu::PolygonMode::Fill,
+                    conservative: false,
+                },
+                depth_stencil: None,
+                multisample: wgpu::MultisampleState {
+                    count: 1,
+                    mask: !0,
+                    alpha_to_coverage_enabled: false,
+                },
+                multiview: None,
+            });
+
+        // our render pipeline to use with colors
+        let render_pipeline_colors =
+            device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                label: Some("Render Pipeline Colors"),
+                layout: Some(&render_pipeline_colors_layout),
+                vertex: wgpu::VertexState {
+                    module: &shader_color,
+                    entry_point: "vs_main",
+                    buffers: &[Vertex::desc()],
+                },
+                fragment: Some(wgpu::FragmentState {
+                    module: &shader_color,
+                    entry_point: "fs_main",
+                    targets: &[Some(wgpu::ColorTargetState {
+                        format: config.format,
+                        blend: Some(wgpu::BlendState::REPLACE),
+                        write_mask: wgpu::ColorWrites::ALL,
+                    })],
+                }),
+                primitive: wgpu::PrimitiveState {
+                    topology: wgpu::PrimitiveTopology::TriangleList,
+                    strip_index_format: None,
+                    front_face: wgpu::FrontFace::Ccw,
+                    cull_mode: Some(wgpu::Face::Back),
+                    unclipped_depth: false,
+                    polygon_mode: wgpu::PolygonMode::Fill,
+                    conservative: false,
+                },
+                depth_stencil: None,
+                multisample: wgpu::MultisampleState {
+                    count: 1,
+                    mask: !0,
+                    alpha_to_coverage_enabled: false,
+                },
+                multiview: None,
+            });
 
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
@@ -378,7 +431,8 @@ impl FrugInstance {
             config,
             size,
             background_color,
-            render_pipeline,
+            render_pipeline_textures,
+            render_pipeline_colors,
             vertex_buffer,
             index_buffer,
             staging_vertices: Vec::new(),
@@ -434,18 +488,25 @@ impl FrugInstance {
                 depth_stencil_attachment: None,
             });
 
-            render_pass.set_pipeline(&self.render_pipeline);
+            let mut camera_bind_group_idx = 0;
 
             // texture bind group
             match drawable_obj.bind_group_idx {
                 Some(idx) => {
+                    render_pass.set_pipeline(&self.render_pipeline_textures);
                     render_pass.set_bind_group(0, &self.diffuse_bind_groups[idx], &[]);
+
+                    // update to camera bind group index so it is in the correct binding position
+                    camera_bind_group_idx = 1;
                 }
-                None => {}
+                None => {
+                    // We'll use the render pipeline with colors instead of textures
+                    render_pass.set_pipeline(&self.render_pipeline_colors);
+                }
             }
 
             // camera bind group
-            render_pass.set_bind_group(1, &self.camera_bind_group, &[]);
+            render_pass.set_bind_group(camera_bind_group_idx, &self.camera_bind_group, &[]);
 
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
@@ -461,6 +522,7 @@ impl FrugInstance {
         // Clear objects
         self.drawable_objects.clear();
 
+        // submit the encoder to the queue & present it on the screen
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
 
@@ -597,7 +659,7 @@ impl FrugInstance {
         self.drawable_objects.push(DrawableObj {
             indices_low_pos: low_bound,
             indices_hi_pos: low_bound + 6,
-            bind_group_idx: Some(0),
+            bind_group_idx: None,
         });
 
         self.add_staging_indexed_vertices(
