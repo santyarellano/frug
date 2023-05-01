@@ -29,6 +29,7 @@ use winit::{
 
 mod texture;
 
+/// Enum to use with `InputHelper.mouse_pressed` to detect user input via mouse.
 pub enum MouseButton {
     Left,
     Right,
