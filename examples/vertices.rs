@@ -3,9 +3,9 @@ use frug::FrugInstance;
 extern crate frug;
 
 fn main() {
-    let (mut frug_instance, event_loop) = frug::new("My Window");
+    let (frug_instance, event_loop) = frug::new("My Window");
 
-    // Docs here...
+    // we create the vertices of the figure we want to draw
     let mut vertices = [
         frug::Vertex {
             position: [-0.0868241, 0.49240386, 0.0],
@@ -38,7 +38,7 @@ fn main() {
 
     let mut col = [0.0, 0.0, 0.0];
 
-    let update_function = move |instance: &mut FrugInstance| {
+    let update_function = move |instance: &mut FrugInstance, _input: &frug::InputHelper| {
         vertices[0].color = [col[0], col[1], col[2]];
         vertices[1].color = [col[1], col[0], col[2]];
         vertices[2].color = [col[1], col[2], col[0]];
