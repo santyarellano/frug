@@ -56,7 +56,7 @@ fn main() {
         }
 
         instance.clear();
-        instance.add_staging_indexed_vertices(&vertices, &indices);
+        instance.add_colored_vertices(&vertices, &indices);
         instance.update_buffers();
     };
 

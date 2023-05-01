@@ -142,12 +142,12 @@ impl Vertex {
     }
 }
 
-/// Textured Object struct
+/// Drawable Object struct
 /// Contains:
 /// `indices_low_pos (u32)` - The lower bound position in the indices array.
 /// `indices_hi_pos (u32)`  - The higher bound position in the indices array.
 /// `bind_group_idx (u32)`  - The index of the bind group to use.
-struct TexturedObj {
+struct DrawableObj {
     indices_low_pos: u32,
     indices_hi_pos: u32,
     bind_group_idx: Option<usize>,
@@ -171,7 +171,7 @@ pub struct FrugInstance {
     num_indices: u32,
     texture_bind_group_layout: wgpu::BindGroupLayout,
     diffuse_bind_groups: Vec<wgpu::BindGroup>,
-    textured_objects: Vec<TexturedObj>,
+    drawable_objects: Vec<DrawableObj>,
     pub camera: Camera,
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
@@ -386,7 +386,7 @@ impl FrugInstance {
             num_indices,
             texture_bind_group_layout,
             diffuse_bind_groups: Vec::new(),
-            textured_objects: Vec::new(),
+            drawable_objects: Vec::new(),
             camera,
             camera_uniform,
             camera_buffer,
@@ -420,7 +420,7 @@ impl FrugInstance {
 
         // draw our objects
         let mut render_pass_op = wgpu::LoadOp::Clear(self.background_color);
-        for tex_obj in &self.textured_objects {
+        for drawable_obj in &self.drawable_objects {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("Render Pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -437,7 +437,7 @@ impl FrugInstance {
             render_pass.set_pipeline(&self.render_pipeline);
 
             // texture bind group
-            match tex_obj.bind_group_idx {
+            match drawable_obj.bind_group_idx {
                 Some(idx) => {
                     render_pass.set_bind_group(0, &self.diffuse_bind_groups[idx], &[]);
                 }
@@ -450,12 +450,16 @@ impl FrugInstance {
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
 
-            render_pass.draw_indexed(tex_obj.indices_low_pos..tex_obj.indices_hi_pos, 0, 0..1);
+            render_pass.draw_indexed(
+                drawable_obj.indices_low_pos..drawable_obj.indices_hi_pos,
+                0,
+                0..1,
+            );
             render_pass_op = wgpu::LoadOp::Load;
         }
 
         // Clear objects
-        self.textured_objects.clear();
+        self.drawable_objects.clear();
 
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
@@ -508,7 +512,20 @@ impl FrugInstance {
     }
 
     /// Adds a set of vertices and indices to the staging data.
-    pub fn add_staging_indexed_vertices(&mut self, vertices: &[Vertex], indices: &[u16]) {
+    pub fn add_colored_vertices(&mut self, vertices: &[Vertex], indices: &[u16]) {
+        // Add the vertices to the drawable objects vector
+        let low_bound = self.staging_indices.len() as u32;
+        self.drawable_objects.push(DrawableObj {
+            indices_low_pos: low_bound,
+            indices_hi_pos: low_bound + indices.len() as u32,
+            bind_group_idx: None,
+        });
+
+        self.add_staging_indexed_vertices(vertices, indices);
+    }
+
+    /// Adds a set of vertices and indices to the staging data.
+    fn add_staging_indexed_vertices(&mut self, vertices: &[Vertex], indices: &[u16]) {
         // update the indices to match the number of current vertices
         let offset: u16 = self.staging_vertices.len() as u16;
         for index in indices {
@@ -532,9 +549,9 @@ impl FrugInstance {
     /// * `h (f32)`             - The height of the rectangle.
     /// * `texture_index (u16)` - The index of the texture we're drawing.
     pub fn add_tex_rect(&mut self, x: f32, y: f32, w: f32, h: f32, texture_index: usize) {
-        // Add the object to the textured objects vector
+        // Add the object to the drawable objects vector
         let low_bound = self.staging_indices.len() as u32;
-        self.textured_objects.push(TexturedObj {
+        self.drawable_objects.push(DrawableObj {
             indices_low_pos: low_bound,
             indices_hi_pos: low_bound + 6,
             bind_group_idx: Some(texture_index),
@@ -575,9 +592,9 @@ impl FrugInstance {
     /// * `h (f32)`             - The height of the rectangle.
     /// * `color [f32; 3]`      - The [red, green, blue] definition of the color to use.
     pub fn add_colored_rect(&mut self, x: f32, y: f32, w: f32, h: f32, color: [f32; 3]) {
-        // Add the object to the textured objects vector
+        // Add the object to the drawable objects vector
         let low_bound = self.staging_indices.len() as u32;
-        self.textured_objects.push(TexturedObj {
+        self.drawable_objects.push(DrawableObj {
             indices_low_pos: low_bound,
             indices_hi_pos: low_bound + 6,
             bind_group_idx: Some(0),
