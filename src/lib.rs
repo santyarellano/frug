@@ -133,7 +133,7 @@ impl Vertex {
                 },
                 // color
                 wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
+                    offset: std::mem::size_of::<[f32; 5]>() as wgpu::BufferAddress,
                     shader_location: 2,
                     format: wgpu::VertexFormat::Float32x3,
                 },
@@ -516,6 +516,7 @@ impl FrugInstance {
                 0,
                 0..1,
             );
+
             render_pass_op = wgpu::LoadOp::Load;
         }
 
