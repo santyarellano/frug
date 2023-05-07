@@ -1,24 +1,39 @@
 extern crate frug;
 
 fn main() {
-    let (mut frug_instance, event_loop) = frug::new("My Window");
+    let (frug_instance, event_loop) = frug::new("My Window");
 
-    let img_bytes = include_bytes!("frog.png");
-    let frog_text_idx = frug_instance.load_texture(img_bytes);
+    let red = [1.0, 0.0, 0.0];
+    let green = [0.0, 1.0, 0.0];
+    let blue = [0.0, 0.0, 1.0];
 
-    let update_function = move |instance: &mut frug::FrugInstance, input: &frug::InputHelper| {
-        // Checking our input
-        if input.key_held(frug::VirtualKeyCode::Right) {
-            instance.camera.eye.x -= 0.01;
-            instance.camera.target.x -= 0.01;
-        } else if input.key_held(frug::VirtualKeyCode::Left) {
-            instance.camera.eye.x += 0.01;
-            instance.camera.target.x += 0.01;
-        }
+    let vertices = [
+        frug::Vertex {
+            // Vertex 0
+            position: [0.0, 0.5, 0.0],
+            color: red,
+            ..Default::default()
+        },
+        frug::Vertex {
+            // Vertex 1
+            position: [-0.5, -0.5, 0.0],
+            color: green,
+            ..Default::default()
+        },
+        frug::Vertex {
+            // Vertex 2
+            position: [0.5, -0.5, 0.0],
+            color: blue,
+            ..Default::default()
+        },
+    ];
 
+    let indices = [0, 1, 2];
+
+    let update_function = move |instance: &mut frug::FrugInstance, _input: &frug::InputHelper| {
         // Rendering
         instance.clear();
-        instance.add_tex_rect(-0.25, 0.0, 0.5, 0.5, frog_text_idx);
+        instance.add_colored_vertices(&vertices, &indices);
         instance.update_buffers();
     };
 
