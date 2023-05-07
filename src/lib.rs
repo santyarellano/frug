@@ -21,8 +21,10 @@ pub use winit_input_helper::WinitInputHelper as InputHelper;
 // Internal use
 use wgpu::util::DeviceExt;
 use winit::{
+    dpi::LogicalSize,
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
+    platform::macos::WindowExtMacOS,
     window::Window,
 };
 
@@ -551,6 +553,43 @@ impl FrugInstance {
     /// ```
     pub fn set_background_color(&mut self, color: wgpu::Color) {
         self.background_color = color;
+    }
+
+    /// Sets or exists fullscreen mode.
+    /// Receives a bool:
+    /// `true`  - Sets fullscreen.
+    /// `false` - Exits fullscreen.
+    pub fn set_fullscreen(&mut self, fullscreen: bool) {
+        if fullscreen {
+            // Enter fullscreen
+            #[cfg(target_os = "macos")]
+            if !self.window.simple_fullscreen() {
+                self.window.set_simple_fullscreen(true);
+            }
+
+            #[cfg(not(target_os = "macos"))]
+            if !self.window.fullscreen().is_some() {
+                let fscreen = Some(winit::window::Fullscreen::Borderless(None));
+                self.window.set_fullscreen(fscreen);
+            }
+        } else {
+            // Exit fullscreen
+            #[cfg(target_os = "macos")]
+            if self.window.simple_fullscreen() {
+                self.window.set_simple_fullscreen(false);
+            }
+
+            #[cfg(not(target_os = "macos"))]
+            if self.window.fullscreen().is_some() {
+                self.window.set_fullscreen(None);
+            }
+        }
+    }
+
+    /// Sets the window size.
+    /// Receives both the width and height of the new size we want for our window.
+    pub fn set_window_size(&mut self, width: f32, height: f32) {
+        self.window.set_inner_size(LogicalSize::new(width, height));
     }
 
     /// Updates the vertex and index buffers with the staging data.
