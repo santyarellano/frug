@@ -3,12 +3,14 @@ extern crate frug;
 fn main() {
     let (mut frug_instance, event_loop) = frug::new("My Window");
 
-    let background_color = frug::create_color(0.1, 0.2, 0.3, 1.0);
-    frug_instance.set_background_color(background_color);
+    let img_bytes = include_bytes!("frog.png");
+    let frog_text_idx = frug_instance.load_texture(img_bytes);
 
     let update_function = move |instance: &mut frug::FrugInstance, _input: &frug::InputHelper| {
         instance.clear();
-        instance.add_colored_rect(0.0, 0.0, 0.75, 0.5, [0.0, 0.5, 0.5]);
+
+        instance.add_tex_rect(-0.25, 0.0, 0.5, 0.5, frog_text_idx);
+
         instance.update_buffers();
     };
 
