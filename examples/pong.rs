@@ -91,6 +91,13 @@ impl CollisionRectangle {
             }
         }
     }
+
+    fn is_game_over(&mut self) -> bool {
+        if self.pos.x - self.width * 2.0 >= 1.0 || self.pos.x + self.width * 2.0 < -1.0 {
+            return true;
+        }
+        return false;
+    }
 }
 
 fn main() {
@@ -107,11 +114,12 @@ fn main() {
     let update_function = move |instance: &mut frug::FrugInstance, input: &frug::InputHelper| {
         let paddle_speed = 0.006;
 
-        // start moving the ball
+        // start moving the ball if it's not moving
         if input.key_pressed(frug::VirtualKeyCode::Return) {
-            let dir = if rng.gen_bool(0.5) { -1 } else { 1 };
-            //ball.vel.x = 0.01 * dir as f32;
-            ball.vel.x = 0.01;
+            if ball.vel.x == 0.0 {
+                let dir = if rng.gen_bool(0.5) { -1 } else { 1 };
+                ball.vel.x = 0.01 * dir as f32;
+            }
         }
 
         // move opponent
@@ -136,6 +144,15 @@ fn main() {
         ball.check_collision(&opponent);
         ball.check_collision(&player);
         ball.check_collision_screen();
+
+        // check if it's game over
+        if ball.is_game_over() {
+            // restart ball
+            ball.pos.x = -0.05;
+            ball.pos.y = -0.05;
+            ball.vel.x = 0.0;
+            ball.vel.y = 0.0;
+        }
 
         // updates
         ball.update_pos();
