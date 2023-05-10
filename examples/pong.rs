@@ -117,8 +117,8 @@ fn main() {
         // start moving the ball if it's not moving
         if input.key_pressed(frug::VirtualKeyCode::Return) {
             if ball.vel.x == 0.0 {
-                let dir = if rng.gen_bool(0.5) { -1 } else { 1 };
-                ball.vel.x = 0.01 * dir as f32;
+                let dir = if rng.gen_bool(0.5) { -1.0 } else { 1.0 };
+                ball.vel.x = 0.01 * dir;
             }
         }
 
