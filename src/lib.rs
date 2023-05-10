@@ -14,6 +14,7 @@
 //! - [ ]  Playing audio
 //! - [ ]  Configure audio
 
+use cgmath::Matrix4;
 // Exported libs
 pub use winit::event::{KeyboardInput, VirtualKeyCode};
 pub use winit_input_helper::WinitInputHelper as InputHelper;
@@ -64,12 +65,19 @@ pub struct Camera {
     fovy: f32,
     znear: f32,
     zfar: f32,
+    is_perspective: bool,
 }
 
 impl Camera {
     fn build_view_projection_matrix(&self) -> cgmath::Matrix4<f32> {
         let view = cgmath::Matrix4::look_at_rh(self.eye, self.target, self.up);
-        let proj = cgmath::perspective(cgmath::Deg(self.fovy), self.aspect, self.znear, self.zfar);
+
+        let proj: Matrix4<f32>;
+        if self.is_perspective {
+            proj = cgmath::perspective(cgmath::Deg(45.0), self.aspect, self.znear, self.zfar);
+        } else {
+            proj = cgmath::ortho(-1.0, 1.0, -1.0, 1.0, self.znear, self.zfar);
+        }
 
         return OPENGL_TO_WGPU_MATRIX * proj * view;
     }
@@ -262,6 +270,7 @@ impl FrugInstance {
             fovy: 45.0,
             znear: 0.1,
             zfar: 100.0,
+            is_perspective: false,
         };
 
         let mut camera_uniform = CameraUniform::new();
