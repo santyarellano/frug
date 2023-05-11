@@ -3,6 +3,10 @@ use frug::FrugInstance;
 
 extern crate frug;
 
+// ======= CONSTANTS ======
+const GRAVITY: f32 = 0.001;
+// ======= CONSTANTS ======
+
 /// This function helps us draw the same texture for our background on repeat.
 fn draw_repeat_background(instance: &mut frug::FrugInstance, tex_idx: usize, rows: u16, cols: u16) {
     let tile_w: f32 = 2.0 / cols as f32;
@@ -24,9 +28,9 @@ fn draw_repeat_background(instance: &mut frug::FrugInstance, tex_idx: usize, row
 struct Entity {
     tex_idx: Option<usize>,
     pos: Option<Vector2<f32>>,
-    //vel: Option<Vector2<f32>>,
+    vel: Option<Vector2<f32>>,
     size: Option<Vector2<f32>>,
-    //gravity: bool,
+    gravity: bool,
 }
 
 impl Default for Entity {
@@ -34,15 +38,29 @@ impl Default for Entity {
         Entity {
             tex_idx: None,
             pos: None,
-            //vel: None,
+            vel: None,
             size: None,
-            //gravity: false,
+            gravity: false,
         }
     }
 }
 
 impl Entity {
-    //fn update() {}
+    fn update(&mut self) {
+        // gravity
+        if self.gravity {
+            self.vel.as_mut().unwrap().y -= GRAVITY;
+        }
+
+        // movement
+        match self.vel {
+            Some(v) => {
+                let pos = self.pos.unwrap();
+                self.pos = Some(pos + v);
+            }
+            None => {}
+        }
+    }
 
     fn render(&self, frug_instance: &mut FrugInstance) {
         match self.tex_idx {
@@ -90,9 +108,9 @@ fn main() {
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 1, 1, 1, 0, 0, 1, 1, 1, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -135,6 +153,8 @@ fn main() {
                         tex_idx: Some(frog_tex_idxs[0]),
                         pos: Some(Vector2 { x: pos_x, y: pos_y }),
                         size: Some(Vector2 { x: size, y: size }),
+                        vel: Some(Vector2 { x: 0.0, y: 0.0 }),
+                        gravity: true,
                         ..Default::default()
                     };
 
@@ -148,6 +168,11 @@ fn main() {
 
     // ***** THE UPDATE FUNCTION *****
     let update_function = move |instance: &mut frug::FrugInstance, _input: &frug::InputHelper| {
+        // update
+        for entity in entities.iter_mut() {
+            entity.update();
+        }
+
         // ======= RENDER ======
         instance.clear();
         // background
