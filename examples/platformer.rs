@@ -2,9 +2,17 @@ extern crate frug;
 
 /// This function helps us draw the same texture for our background on repeat.
 fn draw_repeat_background(instance: &mut frug::FrugInstance, tex_idx: usize, rows: u16, cols: u16) {
-    img_w = for i in 0..rows {
+    let tile_w: f32 = 2.0 / cols as f32;
+    let tile_h: f32 = 2.0 / rows as f32;
+    for i in 0..rows {
         for j in 0..cols {
-            instance.add_tex_rect(x, y, w, h, tex_idx);
+            instance.add_tex_rect(
+                tile_w * j as f32 - 1.0,
+                tile_h * -(i as f32) + 1.0,
+                tile_w,
+                tile_h,
+                tex_idx,
+            );
         }
     }
 }
@@ -32,7 +40,7 @@ fn main() {
         // ======= RENDER ======
         instance.clear();
         // background
-        instance.add_tex_rect(-1.0, 1.0, 1.9, 1.9, background_tex_idx);
+        draw_repeat_background(instance, background_tex_idx, 6, 6);
 
         // present
         instance.update_buffers();
