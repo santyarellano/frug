@@ -77,7 +77,7 @@ fn main() {
 
     // frog
     let frog_tex_idxs = vec![
-        frug_instance.load_texture(include_bytes!("frog.png")),
+        frug_instance.load_texture(include_bytes!("platformer_imgs/frog/0.png")),
         frug_instance.load_texture(include_bytes!("platformer_imgs/frog/1.png")),
         frug_instance.load_texture(include_bytes!("platformer_imgs/frog/2.png")),
         frug_instance.load_texture(include_bytes!("platformer_imgs/frog/3.png")),
