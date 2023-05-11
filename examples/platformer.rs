@@ -1,5 +1,14 @@
 extern crate frug;
 
+/// This function helps us draw the same texture for our background on repeat.
+fn draw_repeat_background(instance: &mut frug::FrugInstance, tex_idx: usize, rows: u16, cols: u16) {
+    img_w = for i in 0..rows {
+        for j in 0..cols {
+            instance.add_tex_rect(x, y, w, h, tex_idx);
+        }
+    }
+}
+
 fn main() {
     let (mut frug_instance, event_loop) = frug::new("My Window");
 
@@ -17,15 +26,13 @@ fn main() {
     let land_tex_idx = frug_instance.load_texture(img_bytes);
 
     // frog
-
     // ======= LOAD ASSETS ======
 
     let update_function = move |instance: &mut frug::FrugInstance, input: &frug::InputHelper| {
         // ======= RENDER ======
         instance.clear();
         // background
-        //instance.add_colored_rect(-0.05, 0.05, 0.1, 0.1, [1.0, 1.0, 1.0]);
-        instance.add_tex_rect(-0.05, 0.05, 0.1, 0.1, background_tex_idx);
+        instance.add_tex_rect(-1.0, 1.0, 1.9, 1.9, background_tex_idx);
 
         // present
         instance.update_buffers();
