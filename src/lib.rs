@@ -74,7 +74,7 @@ impl Camera {
 
         let proj: Matrix4<f32>;
         if self.is_perspective {
-            proj = cgmath::perspective(cgmath::Deg(45.0), self.aspect, self.znear, self.zfar);
+            proj = cgmath::perspective(cgmath::Deg(self.fovy), self.aspect, self.znear, self.zfar);
         } else {
             proj = cgmath::ortho(-1.0, 1.0, -1.0, 1.0, self.znear, self.zfar);
         }

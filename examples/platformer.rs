@@ -1,3 +1,6 @@
+use cgmath::Vector2;
+use frug::FrugInstance;
+
 extern crate frug;
 
 /// This function helps us draw the same texture for our background on repeat.
@@ -17,6 +20,45 @@ fn draw_repeat_background(instance: &mut frug::FrugInstance, tex_idx: usize, row
     }
 }
 
+// ======= OUR ECS STRUCTS AND IMPLEMENTATIONS ======
+struct Entity {
+    tex_idx: Option<usize>,
+    pos: Option<Vector2<f32>>,
+    vel: Option<Vector2<f32>>,
+    size: Option<Vector2<f32>>,
+    gravity: bool,
+}
+
+impl Default for Entity {
+    fn default() -> Self {
+        Entity {
+            tex_idx: None,
+            pos: None,
+            vel: None,
+            size: None,
+            gravity: false,
+        }
+    }
+}
+
+impl Entity {
+    fn update() {}
+
+    fn render(&self, frug_instance: &mut FrugInstance) {
+        match self.tex_idx {
+            Some(idx) => frug_instance.add_tex_rect(
+                self.pos.unwrap().x,
+                self.pos.unwrap().y,
+                self.size.unwrap().x,
+                self.size.unwrap().y,
+                idx,
+            ),
+            None => {}
+        }
+    }
+}
+// ======= OUR ECS STRUCTS AND IMPLEMENTATIONS ======
+
 fn main() {
     let (mut frug_instance, event_loop) = frug::new("My Window");
 
@@ -33,19 +75,74 @@ fn main() {
     let img_bytes = include_bytes!("platformer_imgs/land.png");
     let land_tex_idx = frug_instance.load_texture(img_bytes);
 
-    // frog
+    // frog (todo)
     // ======= LOAD ASSETS ======
 
-    let update_function = move |instance: &mut frug::FrugInstance, input: &frug::InputHelper| {
+    // ======= GAME VARIABLES ======
+    let world_matrix = [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 1, 1, 0, 0, 1, 1, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ];
+    // ======= GAME VARIABLES ======
+
+    // ======= ENTITIES ======
+    let mut entities: Vec<Entity> = Vec::new();
+
+    // load entities according to world matrix
+    for i in 0..world_matrix.len() {
+        for j in 0..world_matrix[0].len() {
+            match world_matrix[i][j] {
+                1 => {
+                    // lands
+                    let land_size = 2.0 / world_matrix.len() as f32;
+                    let land_pos_x = j as f32 * land_size - 1.0;
+                    let land_pos_y = i as f32 * -land_size + 1.0;
+                    let new_land = Entity {
+                        tex_idx: Some(land_tex_idx),
+                        pos: Some(Vector2 {
+                            x: land_pos_x,
+                            y: land_pos_y,
+                        }),
+                        size: Some(Vector2 {
+                            x: land_size,
+                            y: land_size,
+                        }),
+                        ..Default::default()
+                    };
+
+                    entities.push(new_land);
+                }
+                _ => {}
+            }
+        }
+    }
+    // ======= ENTITIES ======
+
+    // ***** THE UPDATE FUNCTION *****
+    let update_function = move |instance: &mut frug::FrugInstance, _input: &frug::InputHelper| {
         // ======= RENDER ======
         instance.clear();
         // background
         draw_repeat_background(instance, background_tex_idx, 6, 6);
 
+        // entities
+        for entity in &entities {
+            entity.render(instance);
+        }
+
         // present
         instance.update_buffers();
         // ======= RENDER ======
     };
+    // ***** THE UPDATE FUNCTION *****
 
     frug_instance.run(event_loop, update_function);
 }
