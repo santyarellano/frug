@@ -24,9 +24,9 @@ fn draw_repeat_background(instance: &mut frug::FrugInstance, tex_idx: usize, row
 struct Entity {
     tex_idx: Option<usize>,
     pos: Option<Vector2<f32>>,
-    vel: Option<Vector2<f32>>,
+    //vel: Option<Vector2<f32>>,
     size: Option<Vector2<f32>>,
-    gravity: bool,
+    //gravity: bool,
 }
 
 impl Default for Entity {
@@ -34,15 +34,15 @@ impl Default for Entity {
         Entity {
             tex_idx: None,
             pos: None,
-            vel: None,
+            //vel: None,
             size: None,
-            gravity: false,
+            //gravity: false,
         }
     }
 }
 
 impl Entity {
-    fn update() {}
+    //fn update() {}
 
     fn render(&self, frug_instance: &mut FrugInstance) {
         match self.tex_idx {
@@ -75,7 +75,13 @@ fn main() {
     let img_bytes = include_bytes!("platformer_imgs/land.png");
     let land_tex_idx = frug_instance.load_texture(img_bytes);
 
-    // frog (todo)
+    // frog
+    let frog_tex_idxs = vec![
+        frug_instance.load_texture(include_bytes!("frog.png")),
+        frug_instance.load_texture(include_bytes!("platformer_imgs/frog/1.png")),
+        frug_instance.load_texture(include_bytes!("platformer_imgs/frog/2.png")),
+        frug_instance.load_texture(include_bytes!("platformer_imgs/frog/3.png")),
+    ];
     // ======= LOAD ASSETS ======
 
     // ======= GAME VARIABLES ======
@@ -86,7 +92,7 @@ fn main() {
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 1, 1, 1, 0, 0, 1, 1, 1, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -119,6 +125,20 @@ fn main() {
                     };
 
                     entities.push(new_land);
+                }
+                2 => {
+                    // player
+                    let size = 2.0 / world_matrix.len() as f32;
+                    let pos_x = j as f32 * size - 1.0;
+                    let pos_y = i as f32 * -size + 1.0;
+                    let new_player = Entity {
+                        tex_idx: Some(frog_tex_idxs[0]),
+                        pos: Some(Vector2 { x: pos_x, y: pos_y }),
+                        size: Some(Vector2 { x: size, y: size }),
+                        ..Default::default()
+                    };
+
+                    entities.push(new_player);
                 }
                 _ => {}
             }
