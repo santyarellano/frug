@@ -70,17 +70,14 @@ impl Entity {
                     // only collide if other object has collisions as well
                     if all_entities[i].collisions {
                         match self.check_collision(&all_entities[i]) {
-                            Collision::Up => {
-                                match self.vel.as_mut() {
-                                    Some(v) => {
-                                        if v.y > 0.0 {
-                                            //self.vel.as_mut().unwrap() = 0.0;
-                                            v.y = 0.0;
-                                        }
+                            Collision::Up => match self.vel.as_mut() {
+                                Some(v) => {
+                                    if v.y > 0.0 {
+                                        v.y = 0.0;
                                     }
-                                    None => {}
                                 }
-                            }
+                                None => {}
+                            },
                             Collision::Down => match self.vel.as_mut() {
                                 Some(v) => {
                                     if v.y < 0.0 {
@@ -89,12 +86,22 @@ impl Entity {
                                 }
                                 None => {}
                             },
-                            Collision::Left => {
-                                println!("colliding left");
-                            }
-                            Collision::Right => {
-                                println!("colliding right");
-                            }
+                            Collision::Left => match self.vel.as_mut() {
+                                Some(v) => {
+                                    if v.x < 0.0 {
+                                        v.x = 0.0;
+                                    }
+                                }
+                                None => {}
+                            },
+                            Collision::Right => match self.vel.as_mut() {
+                                Some(v) => {
+                                    if v.x > 0.0 {
+                                        v.x = 0.0;
+                                    }
+                                }
+                                None => {}
+                            },
                             Collision::None => {}
                         }
                     }
