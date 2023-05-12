@@ -25,9 +25,11 @@ use winit::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
-    platform::macos::WindowExtMacOS,
     window::Window,
 };
+
+#[cfg(target_os = "macos")]
+use winit::platform::macos::WindowExtMacOS;
 
 mod texture;
 
