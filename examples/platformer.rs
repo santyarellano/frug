@@ -160,6 +160,14 @@ impl Entity {
         }
     }
 
+    fn is_colliding(&self, other: &Entity) -> bool {
+        self.pos.unwrap().x < other.pos.unwrap().x + other.size.unwrap().x
+            && self.pos.unwrap().x + self.size.unwrap().x > other.pos.unwrap().x
+            && self.pos.unwrap().y < other.pos.unwrap().y + other.size.unwrap().y
+            && self.pos.unwrap().y + self.size.unwrap().y > other.pos.unwrap().y
+        //return false;
+    }
+
     // checks collision with another entity
     fn check_collision(&self, other: &Entity) -> Collision {
         let self_right = self.pos.unwrap().x + self.size.unwrap().x;
@@ -238,7 +246,7 @@ fn main() {
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+        [0, 1, 1, 1, 0, 0, 1, 1, 1, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
     // ======= GAME VARIABLES ======
