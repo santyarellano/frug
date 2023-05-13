@@ -5,6 +5,8 @@ extern crate frug;
 
 // ======= CONSTANTS & ENUMS ======
 const GRAVITY: f32 = 0.001;
+const PLAYER_SPEED: f32 = 0.01;
+const PLAYER_JUMP: f32 = 0.02;
 
 enum Collision {
     Up,
@@ -41,6 +43,7 @@ struct Entity {
     size: Option<Vector2<f32>>,
     collisions: bool,
     gravity: bool,
+    controlling: bool,
 }
 
 impl Default for Entity {
@@ -52,11 +55,36 @@ impl Default for Entity {
             size: None,
             collisions: false,
             gravity: false,
+            controlling: false,
         }
     }
 }
 
 impl Entity {
+    fn process_input(&mut self, input: &frug::InputHelper) {
+        if self.controlling {
+            match self.vel.as_mut() {
+                Some(vel) => {
+                    vel.x = 0.0;
+                    if input.key_held(frug::VirtualKeyCode::Left) {
+                        vel.x -= PLAYER_SPEED;
+                    }
+
+                    if input.key_held(frug::VirtualKeyCode::Right) {
+                        vel.x += PLAYER_SPEED;
+                    }
+
+                    if input.key_pressed(frug::VirtualKeyCode::Space) {
+                        if vel.y == 0.0 {
+                            vel.y += PLAYER_JUMP;
+                        }
+                    }
+                }
+                None => {}
+            }
+        }
+    }
+
     fn update(&mut self, all_entities: &[Entity], current_idx: usize) {
         // gravity
         if self.gravity {
@@ -255,6 +283,7 @@ fn main() {
                         vel: Some(Vector2 { x: 0.0, y: 0.0 }),
                         collisions: true,
                         gravity: true,
+                        controlling: true,
                         ..Default::default()
                     };
 
@@ -267,7 +296,12 @@ fn main() {
     // ======= ENTITIES ======
 
     // ***** THE UPDATE FUNCTION *****
-    let update_function = move |instance: &mut frug::FrugInstance, _input: &frug::InputHelper| {
+    let update_function = move |instance: &mut frug::FrugInstance, input: &frug::InputHelper| {
+        // process input
+        for entity in entities.iter_mut() {
+            entity.process_input(input)
+        }
+
         // update
         for i in 0..entities.len() {
             let mut current_entity = entities[i].clone();
