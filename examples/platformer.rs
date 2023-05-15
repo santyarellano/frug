@@ -328,7 +328,7 @@ fn main() {
     let img_bytes = include_bytes!("platformer_imgs/Purple.png");
     let background_tex_idx = frug_instance.load_texture(img_bytes);
 
-    // land
+    // floor tiles
     let img_bytes = include_bytes!("platformer_imgs/land.png");
     let land_tex_idx = frug_instance.load_texture(img_bytes);
 
