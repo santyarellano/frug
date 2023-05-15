@@ -36,7 +36,7 @@ fn main() {
 
         // Draw
         instance.clear();
-        instance.add_tex_rect(-0.25, 0.0, 0.5, 0.5, tex_to_use);
+        instance.add_tex_rect(-0.25, 0.0, 0.5, 0.5, tex_to_use, false, false);
         instance.update_buffers();
     };
 

@@ -29,6 +29,8 @@ fn draw_repeat_background(instance: &mut frug::FrugInstance, tex_idx: usize, row
                 tile_w,
                 tile_h,
                 tex_idx,
+                false,
+                false,
             );
         }
     }
@@ -36,15 +38,26 @@ fn draw_repeat_background(instance: &mut frug::FrugInstance, tex_idx: usize, row
 
 // ======= OUR ECS STRUCTS AND IMPLEMENTATIONS ======
 #[derive(Clone)]
+struct Sprite {
+    tex_idxs: Vec<usize>,
+    anim_speed: u8,
+    frame_timer: u8,
+    current_idx: usize,
+}
+
+#[derive(Clone)]
 struct Entity {
     _name: Option<String>,
     tex_idx: Option<usize>,
+    sprite: Option<Sprite>,
     pos: Option<Vector2<f32>>,
     vel: Option<Vector2<f32>>,
     size: Option<Vector2<f32>>,
     collisions: bool,
     gravity: bool,
     controlling: bool,
+    flip_img_x: bool,
+    flip_img_y: bool,
 }
 
 impl Default for Entity {
@@ -52,12 +65,15 @@ impl Default for Entity {
         Entity {
             _name: None,
             tex_idx: None,
+            sprite: None,
             pos: None,
             vel: None,
             size: None,
             collisions: false,
             gravity: false,
             controlling: false,
+            flip_img_x: false,
+            flip_img_y: false,
         }
     }
 }
@@ -148,6 +164,9 @@ impl Entity {
             }
             None => {}
         }
+
+        // animate
+        self.animate();
     }
 
     fn render(&self, frug_instance: &mut FrugInstance) {
@@ -158,7 +177,68 @@ impl Entity {
                 self.size.unwrap().x,
                 self.size.unwrap().y,
                 idx,
+                self.flip_img_x,
+                self.flip_img_y,
             ),
+            None => {}
+        }
+    }
+
+    // choose the correct texture index accordingly
+    fn animate(&mut self) {
+        // animate only if object has sprites
+        match self.sprite.as_mut() {
+            Some(sprite) => {
+                match &self._name {
+                    // Define how the animations work for each name
+                    Some(name) => match name.as_str() {
+                        "Player" => {
+                            match &self.vel {
+                                Some(vel) => {
+                                    // flip img if necessary
+                                    if vel.x > 0.0 {
+                                        self.flip_img_x = false;
+                                    } else if vel.x < 0.0 {
+                                        self.flip_img_x = true;
+                                    }
+
+                                    // jump/fall (has priority)
+                                    if vel.y > 0.0 {
+                                        sprite.current_idx = 5;
+                                    } else if vel.y < 0.0 {
+                                        sprite.current_idx = 4;
+                                    }
+                                    // walk
+                                    else if vel.x != 0.0 {
+                                        // update timer
+                                        if sprite.frame_timer == 0 {
+                                            // timer ended
+                                            sprite.frame_timer = sprite.anim_speed;
+                                            sprite.current_idx += 1;
+                                            if sprite.current_idx > 3 {
+                                                // animation must go back to beggining
+                                                sprite.current_idx = 0;
+                                            }
+                                        }
+                                        sprite.frame_timer -= 1;
+                                    }
+                                    // idle
+                                    else {
+                                        sprite.frame_timer = 0;
+                                        sprite.current_idx = 0;
+                                    }
+                                }
+                                None => {}
+                            }
+
+                            // update texture index
+                            self.tex_idx = Some(sprite.tex_idxs[sprite.current_idx]);
+                        }
+                        _ => {}
+                    },
+                    None => {}
+                }
+            }
             None => {}
         }
     }
@@ -258,6 +338,8 @@ fn main() {
         frug_instance.load_texture(include_bytes!("platformer_imgs/frog/1.png")),
         frug_instance.load_texture(include_bytes!("platformer_imgs/frog/2.png")),
         frug_instance.load_texture(include_bytes!("platformer_imgs/frog/3.png")),
+        frug_instance.load_texture(include_bytes!("platformer_imgs/frog/Fall.png")),
+        frug_instance.load_texture(include_bytes!("platformer_imgs/frog/Jump.png")),
     ];
     // ======= LOAD ASSETS ======
 
@@ -267,10 +349,10 @@ fn main() {
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-        [0, 0, 2, 0, 0, 0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-        [0, 0, 1, 0, 1, 0, 1, 1, 1, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 2, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
@@ -311,7 +393,13 @@ fn main() {
                     let pos_y = i as f32 * -size + 1.0;
                     let new_player = Entity {
                         _name: Some("Player".to_string()),
-                        tex_idx: Some(frog_tex_idxs[0]),
+                        tex_idx: None,
+                        sprite: Some(Sprite {
+                            tex_idxs: frog_tex_idxs.clone(),
+                            anim_speed: 8,
+                            frame_timer: 8,
+                            current_idx: 0,
+                        }),
                         pos: Some(Vector2 { x: pos_x, y: pos_y }),
                         size: Some(Vector2 { x: size, y: size }),
                         vel: Some(Vector2 { x: 0.0, y: 0.0 }),

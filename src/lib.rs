@@ -661,7 +661,16 @@ impl FrugInstance {
     /// * `w (f32)`             - The width of the rectangle.
     /// * `h (f32)`             - The height of the rectangle.
     /// * `texture_index (u16)` - The index of the texture we're drawing.
-    pub fn add_tex_rect(&mut self, x: f32, y: f32, w: f32, h: f32, texture_index: usize) {
+    pub fn add_tex_rect(
+        &mut self,
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+        texture_index: usize,
+        flip_x: bool,
+        flip_y: bool,
+    ) {
         // Add the object to the drawable objects vector
         let low_bound = self.staging_indices.len() as u32;
         self.drawable_objects.push(DrawableObj {
@@ -670,26 +679,43 @@ impl FrugInstance {
             bind_group_idx: Some(texture_index),
         });
 
+        let mut tex_coords = [
+            0.0, // left
+            1.0, // right
+            0.0, // top
+            1.0, // botom
+        ];
+
+        if flip_x {
+            tex_coords[0] = 1.0;
+            tex_coords[1] = 0.0;
+        }
+
+        if flip_y {
+            tex_coords[2] = 1.0;
+            tex_coords[3] = 0.0;
+        }
+
         self.add_staging_indexed_vertices(
             &[
                 Vertex {
                     position: [x, y, 0.0],
-                    text_coords: [0.0, 0.0],
+                    text_coords: [tex_coords[0], tex_coords[2]],
                     ..Default::default()
                 },
                 Vertex {
                     position: [x, y - h, 0.0],
-                    text_coords: [0.0, 1.0],
+                    text_coords: [tex_coords[0], tex_coords[3]],
                     ..Default::default()
                 },
                 Vertex {
                     position: [x + w, y - h, 0.0],
-                    text_coords: [1.0, 1.0],
+                    text_coords: [tex_coords[1], tex_coords[3]],
                     ..Default::default()
                 },
                 Vertex {
                     position: [x + w, y, 0.0],
-                    text_coords: [1.0, 0.0],
+                    text_coords: [tex_coords[1], tex_coords[2]],
                     ..Default::default()
                 },
             ],
