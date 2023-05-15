@@ -2,6 +2,12 @@
 name = "frug"
 version = "0.1.0"
 edition = "2021"
+description = "A simple and learnable graphics library for rust"
+readme = "Readme.md"
+homepage = "https://santyarellano.github.io/frug_book/"
+repository = "https://github.com/santyarellano/frug"
+license = "MIT"
+keywords = ["gamedev", "graphics"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
