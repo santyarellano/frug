@@ -9,8 +9,8 @@ const PLAYER_SPEED: f32 = 0.01;
 const PLAYER_JUMP: f32 = 0.02;
 
 enum Collision {
-    Up,
-    Down,
+    Top,
+    Bottom,
     Left,
     Right,
     None,
@@ -37,6 +37,7 @@ fn draw_repeat_background(instance: &mut frug::FrugInstance, tex_idx: usize, row
 // ======= OUR ECS STRUCTS AND IMPLEMENTATIONS ======
 #[derive(Clone)]
 struct Entity {
+    _name: Option<String>,
     tex_idx: Option<usize>,
     pos: Option<Vector2<f32>>,
     vel: Option<Vector2<f32>>,
@@ -49,6 +50,7 @@ struct Entity {
 impl Default for Entity {
     fn default() -> Self {
         Entity {
+            _name: None,
             tex_idx: None,
             pos: None,
             vel: None,
@@ -98,7 +100,7 @@ impl Entity {
                     // only collide if other object has collisions as well
                     if all_entities[i].collisions {
                         match self.check_collision(&all_entities[i]) {
-                            Collision::Up => match self.vel.as_mut() {
+                            Collision::Top => match self.vel.as_mut() {
                                 Some(v) => {
                                     if v.y > 0.0 {
                                         v.y = 0.0;
@@ -106,8 +108,9 @@ impl Entity {
                                 }
                                 None => {}
                             },
-                            Collision::Down => match self.vel.as_mut() {
+                            Collision::Bottom => match self.vel.as_mut() {
                                 Some(v) => {
+                                    //println!("{}", v.y);
                                     if v.y < 0.0 {
                                         v.y = 0.0;
                                     }
@@ -160,53 +163,75 @@ impl Entity {
         }
     }
 
-    fn is_colliding(&self, other: &Entity) -> bool {
-        self.pos.unwrap().x < other.pos.unwrap().x + other.size.unwrap().x
-            && self.pos.unwrap().x + self.size.unwrap().x > other.pos.unwrap().x
-            && self.pos.unwrap().y < other.pos.unwrap().y + other.size.unwrap().y
-            && self.pos.unwrap().y + self.size.unwrap().y > other.pos.unwrap().y
-        //return false;
-    }
-
     // checks collision with another entity
     fn check_collision(&self, other: &Entity) -> Collision {
-        let self_right = self.pos.unwrap().x + self.size.unwrap().x;
-        let self_bottom = self.pos.unwrap().y + self.size.unwrap().y;
-        let other_right = other.pos.unwrap().x + other.size.unwrap().x;
-        let other_bottom = other.pos.unwrap().y + other.size.unwrap().y;
+        let collision_room = self.size.unwrap() / (2.0 * 3.0) / 2.0;
 
-        if self.pos.unwrap().y <= other_bottom
-            && self_bottom >= other.pos.unwrap().y
-            && self.pos.unwrap().x <= other_right
-            && self_right >= other.pos.unwrap().x
+        // self collision borders
+        let s_horizontal = (
+            self.get_center().x - collision_room.x, // left
+            self.get_center().x + collision_room.x, // right
+        );
+        let s_vertical = (
+            self.get_center().y + collision_room.y, // top
+            self.get_center().y - collision_room.y, // bottom
+        );
+
+        // other collision borders
+        let o_horizontal = (
+            other.pos.unwrap().x,                         // left
+            other.pos.unwrap().x + other.size.unwrap().x, // right
+        );
+        let o_vertical = (
+            other.pos.unwrap().y,                         // top
+            other.pos.unwrap().y - other.size.unwrap().y, // bottom
+        );
+
+        // check for vertical collisions
+        if (s_horizontal.0 > o_horizontal.0 && s_horizontal.0 < o_horizontal.1)
+            || (s_horizontal.1 > o_horizontal.0 && s_horizontal.1 < o_horizontal.1)
         {
-            let horiz_dist = ((self.pos.unwrap().x + self.size.unwrap().x / 2.0)
-                - (other.pos.unwrap().x + other.size.unwrap().x / 2.0))
-                .abs();
-            let vert_dist = ((self.pos.unwrap().y + self.size.unwrap().y / 2.0)
-                - (other.pos.unwrap().y + other.size.unwrap().y / 2.0))
-                .abs();
+            // self is within the horizontal range of other
 
-            if vert_dist > horiz_dist {
-                if self.pos.unwrap().y + self.size.unwrap().y / 2.0
-                    < other.pos.unwrap().y + other.size.unwrap().y / 2.0
-                {
-                    Collision::Up
-                } else {
-                    Collision::Down
-                }
-            } else {
-                if self.pos.unwrap().x + self.size.unwrap().x / 2.0
-                    < other.pos.unwrap().x + other.size.unwrap().x / 2.0
-                {
-                    Collision::Left
-                } else {
-                    Collision::Right
-                }
+            // check for top collision
+            if self.pos.unwrap().y >= o_vertical.1 && self.pos.unwrap().y <= o_vertical.0 {
+                return Collision::Top;
             }
-        } else {
-            Collision::None
+            // check for bottom collision
+            else if self.pos.unwrap().y - self.size.unwrap().y <= o_vertical.0
+                && self.pos.unwrap().y - self.size.unwrap().y >= o_vertical.1
+            {
+                return Collision::Bottom;
+            }
         }
+
+        // check for horizontal collisions
+        if (s_vertical.0 < o_vertical.0 && s_vertical.0 > o_vertical.1)
+            || (s_vertical.1 < o_vertical.0 && s_vertical.1 > o_vertical.1)
+        {
+            // self is within the vertical range of other
+
+            // check for left collision
+            if self.pos.unwrap().x < o_horizontal.1 && self.pos.unwrap().x > o_horizontal.0 {
+                return Collision::Left;
+            }
+
+            // check for right collision
+            if self.pos.unwrap().x + self.size.unwrap().x > o_horizontal.0
+                && self.pos.unwrap().x + self.size.unwrap().x < o_horizontal.1
+            {
+                return Collision::Right;
+            }
+        }
+
+        return Collision::None;
+    }
+
+    fn get_center(&self) -> Vector2<f32> {
+        return Vector2 {
+            x: self.pos.unwrap().x + self.size.unwrap().x / 2.0,
+            y: self.pos.unwrap().y - self.size.unwrap().y / 2.0,
+        };
     }
 }
 // ======= OUR ECS STRUCTS AND IMPLEMENTATIONS ======
@@ -242,11 +267,11 @@ fn main() {
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+        [0, 0, 2, 0, 0, 0, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+        [0, 0, 1, 0, 1, 0, 1, 1, 1, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 1, 1, 0, 0, 1, 1, 1, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
     // ======= GAME VARIABLES ======
@@ -285,6 +310,7 @@ fn main() {
                     let pos_x = j as f32 * size - 1.0;
                     let pos_y = i as f32 * -size + 1.0;
                     let new_player = Entity {
+                        _name: Some("Player".to_string()),
                         tex_idx: Some(frog_tex_idxs[0]),
                         pos: Some(Vector2 { x: pos_x, y: pos_y }),
                         size: Some(Vector2 { x: size, y: size }),
