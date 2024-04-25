@@ -5,6 +5,7 @@
 use cgmath::Matrix4;
 // Exported libs
 pub use winit::event::{KeyboardInput, VirtualKeyCode};
+pub use winit::event_loop::EventLoop;
 pub use winit_input_helper::WinitInputHelper as InputHelper;
 
 // Internal use
@@ -12,7 +13,7 @@ use wgpu::util::DeviceExt;
 use winit::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
-    event_loop::{ControlFlow, EventLoop},
+    event_loop::ControlFlow,
     window::Window,
 };
 
