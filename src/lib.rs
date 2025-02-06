@@ -27,18 +27,15 @@ pub fn create_window(sdl_context: &Sdl) -> Canvas<Window> {
     return canvas;
 }
 
-pub fn draw_rectangles(canvas: &mut Canvas<Window>) {
-    canvas.set_draw_color(Color::RGB(0, 0, 0));
-    canvas.clear();
-
-    canvas.set_draw_color(Color::RGB(255, 0, 0));
-    let _ = canvas.fill_rect(Rect::new(50, 50, 200, 150));
-
-    canvas.set_draw_color(Color::RGB(0, 255, 0));
-    let _ = canvas.fill_rect(Rect::new(300, 50, 200, 150));
-
-    canvas.set_draw_color(Color::RGB(0, 0, 255));
-    let _ = canvas.fill_rect(Rect::new(550, 50, 200, 150));
-
-    canvas.present();
+/// Draws a rectangle on the given canvas using the given color, position, and dimensions.
+pub fn draw_rectangle(
+    canvas: &mut Canvas<Window>,
+    color: Color,
+    x: i32,
+    y: i32,
+    width: u32,
+    height: u32,
+) {
+    canvas.set_draw_color(color);
+    let _ = canvas.fill_rect(Rect::new(x, y, width, height));
 }
