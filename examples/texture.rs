@@ -1,44 +1,49 @@
-use sdl3::event::Event;
+use frug::{self, Color, Event, Keycode};
 use sdl3::image::LoadTexture;
-use sdl3::keyboard::Keycode;
-use std::env;
-use std::path::Path;
+use std::time::Duration;
 
-pub fn run(png: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    let sdl_context = sdl3::init()?;
+fn main() {
+    let graphics_context = sdl3::init().unwrap();
 
-    let mut canvas = frug::create_window(&sdl_context);
+    let mut canvas = frug::create_window(&graphics_context);
 
     let texture_creator = canvas.texture_creator();
-    let texture = texture_creator.load_texture(png)?;
+    let texture = match texture_creator.load_texture("examples/other_frog.png") {
+        Ok(texture) => texture,
+        Err(e) => {
+            eprintln!("Failed to load texture: {}", e);
+            return;
+        }
+    };
 
-    frug::draw_textured_rectangle(&mut canvas, &texture, 50, 50, 100, 100);
+    let background_color = Color::RGB(50, 50, 50);
+
+    canvas.set_draw_color(background_color);
+    canvas.clear();
     canvas.present();
 
-    'mainloop: loop {
-        for event in sdl_context.event_pump()?.poll_iter() {
+    let mut event_pump = graphics_context.event_pump().unwrap();
+    'running: loop {
+        canvas.set_draw_color(background_color);
+        canvas.clear();
+
+        // input
+        for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }
                 | Event::KeyDown {
-                    keycode: Option::Some(Keycode::Escape),
+                    keycode: Some(Keycode::Escape),
                     ..
-                } => break 'mainloop,
+                } => break 'running,
                 _ => {}
             }
         }
+
+        // ** Game loop here **
+        frug::draw_textured_rectangle(&mut canvas, &texture, 50, 50, 100, 100);
+        // ** End of game loop **
+
+        canvas.present();
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
-
-    Ok(())
-}
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<_> = env::args().collect();
-
-    if args.len() < 2 {
-        println!("Usage: cargo run /path/to/image.(png|jpg)")
-    } else {
-        run(Path::new(&args[1]))?;
-    }
-
-    Ok(())
 }
