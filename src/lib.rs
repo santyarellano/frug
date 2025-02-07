@@ -74,5 +74,5 @@ pub fn draw_textured_rectangle(
     height: u32,
 ) {
     let rect = Rect::new(x, y, width, height);
-    //let _ = canvas.copy(texture, None, Some(rect));
+    let _ = canvas.copy(&texture, None, rect);
 }

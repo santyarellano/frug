@@ -6,18 +6,13 @@ use std::path::Path;
 
 pub fn run(png: &Path) -> Result<(), Box<dyn std::error::Error>> {
     let sdl_context = sdl3::init()?;
-    let video_subsystem = sdl_context.video()?;
-    let window = video_subsystem
-        .window("rust-sdl3 demo: Video", 800, 600)
-        .position_centered()
-        .build()
-        .map_err(|e| e.to_string())?;
 
-    let mut canvas = window.into_canvas();
+    let mut canvas = frug::create_window(&sdl_context);
+
     let texture_creator = canvas.texture_creator();
     let texture = texture_creator.load_texture(png)?;
 
-    canvas.copy(&texture, None, None)?;
+    frug::draw_textured_rectangle(&mut canvas, &texture, 50, 50, 100, 100);
     canvas.present();
 
     'mainloop: loop {
