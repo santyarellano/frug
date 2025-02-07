@@ -1,44 +1,49 @@
-extern crate frug;
+use sdl3::event::Event;
+use sdl3::image::LoadTexture;
+use sdl3::keyboard::Keycode;
+use std::env;
+use std::path::Path;
 
-fn main() {
-    let (mut frug_instance, event_loop) = frug::new("My Window");
+pub fn run(png: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let sdl_context = sdl3::init()?;
+    let video_subsystem = sdl_context.video()?;
+    let window = video_subsystem
+        .window("rust-sdl3 demo: Video", 800, 600)
+        .position_centered()
+        .build()
+        .map_err(|e| e.to_string())?;
 
-    let img_bytes = include_bytes!("frog.png");
-    let frog_text_idx = frug_instance.load_texture(img_bytes);
+    let mut canvas = window.into_canvas();
+    let texture_creator = canvas.texture_creator();
+    let texture = texture_creator.load_texture(png)?;
 
-    let img_bytes = include_bytes!("other_frog.png");
-    let frog2_text_idx = frug_instance.load_texture(img_bytes);
+    canvas.copy(&texture, None, None)?;
+    canvas.present();
 
-    let mut tex_to_use = frog_text_idx;
-
-    let update_function = move |instance: &mut frug::FrugInstance, input: &frug::InputHelper| {
-        // Act on input
-        // We'll test our input by changing the frog we're using when we press space bar or mouse left click.
-        if input.mouse_pressed(frug::MouseButton::Left.into())
-            || input.key_pressed(frug::VirtualKeyCode::Space)
-        {
-            tex_to_use = if tex_to_use == frog_text_idx {
-                frog2_text_idx
-            } else {
-                frog_text_idx
+    'mainloop: loop {
+        for event in sdl_context.event_pump()?.poll_iter() {
+            match event {
+                Event::Quit { .. }
+                | Event::KeyDown {
+                    keycode: Option::Some(Keycode::Escape),
+                    ..
+                } => break 'mainloop,
+                _ => {}
             }
         }
+    }
 
-        // We'll also move our camera with left or right input
-        let speed = 0.01;
-        if input.key_held(frug::VirtualKeyCode::Right) {
-            instance.camera.eye.x -= speed;
-            instance.camera.target.x -= speed;
-        } else if input.key_held(frug::VirtualKeyCode::Left) {
-            instance.camera.eye.x += speed;
-            instance.camera.target.x += speed;
-        }
+    Ok(())
+}
 
-        // Draw
-        instance.clear();
-        instance.add_tex_rect(-0.25, 0.0, 0.5, 0.5, tex_to_use, false, false);
-        instance.update_buffers();
-    };
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args: Vec<_> = env::args().collect();
 
-    frug_instance.run(event_loop, update_function);
+    if args.len() < 2 {
+        println!("Usage: cargo run /path/to/image.(png|jpg)")
+    } else {
+        run(Path::new(&args[1]))?;
+    }
+
+    Ok(())
 }
