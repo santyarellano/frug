@@ -40,6 +40,7 @@ fn main() {
         }
 
         // ** Game loop here **
+        //frug::draw_rectangle(&mut canvas, Color::RGB(150, 150, 150), 50, 50, 100, 100);
         frug::draw_textured_rectangle(&mut canvas, &texture, 50, 50, 100, 100);
         // ** End of game loop **
 
