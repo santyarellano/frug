@@ -13,7 +13,13 @@ use sdl3::rect::Rect;
 use sdl3::render::Texture;
 use sdl3::render::{Canvas, TextureCreator};
 use sdl3::video::{Window, WindowContext};
-use sdl3::Sdl;
+use sdl3::{Error, Sdl};
+
+/// Inits frug and returns the context.
+pub fn init() -> Result<Sdl, Error> {
+    let context = sdl3::init();
+    return context;
+}
 
 /// Returns a canvas where we can draw.
 pub fn create_window(sdl_context: &Sdl) -> Canvas<Window> {
