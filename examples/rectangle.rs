@@ -4,7 +4,7 @@ use frug::{self, Color, Event, Keycode};
 
 fn main() {
     let context = frug::init().unwrap();
-    let mut canvas = frug::create_window(&context);
+    let mut canvas = frug::create_window(&context, 800, 600);
     let background_color = Color::RGB(50, 50, 50);
 
     canvas.set_draw_color(background_color);

@@ -1,22 +1,38 @@
-use cgmath::Vector2;
-use rand::Rng;
+use frug::{Color, Event, Keycode};
+use std::ops::AddAssign;
+use std::time::Duration;
 
-extern crate frug;
+const WIDTH: u32 = 800;
+const HEIGHT: u32 = 600;
+
+#[derive(Clone, Copy)]
+struct Vector2<T> {
+    x: T,
+    y: T,
+}
+
+// Implement AddAssign trait for Vector2
+impl<T: AddAssign> AddAssign for Vector2<T> {
+    fn add_assign(&mut self, other: Self) {
+        self.x += other.x;
+        self.y += other.y;
+    }
+}
 
 struct CollisionRectangle {
-    pos: Vector2<f32>,
-    width: f32,
-    height: f32,
-    vel: Vector2<f32>,
+    pos: Vector2<i32>,
+    width: i32,
+    height: i32,
+    vel: Vector2<i32>,
 }
 
 impl CollisionRectangle {
-    fn new(x: f32, y: f32, width: f32, height: f32) -> CollisionRectangle {
+    fn new(x: i32, y: i32, width: i32, height: i32) -> CollisionRectangle {
         CollisionRectangle {
             pos: Vector2 { x, y },
             width,
             height,
-            vel: Vector2 { x: 0.0, y: 0.0 },
+            vel: Vector2 { x: 0, y: 0 },
         }
     }
 
@@ -26,10 +42,8 @@ impl CollisionRectangle {
 
     /// This function will only work for the ball!
     fn check_collision(&mut self, obj: &CollisionRectangle) {
-        let mut rng = rand::thread_rng();
-
-        let tolerance_w = 0.15 * self.width; // percentage of shape
-        let tolerance_h = 0.15 * self.height; // percentage of shape
+        let tolerance_w = (0.15 * self.width as f32).ceil() as i32; // percentage of shape
+        let tolerance_h = (0.15 * self.height as f32).ceil() as i32; // percentage of shape
 
         // Horizontal collision
         if self.pos.y - tolerance_h > obj.pos.y - obj.height {
@@ -38,8 +52,8 @@ impl CollisionRectangle {
                 if self.pos.x < obj.pos.x + obj.width {
                     if self.pos.x > obj.pos.x {
                         // Left collision is happening
-                        self.vel.x *= -1.0;
-                        self.vel.y = rng.gen_range(-0.01..0.01);
+                        self.vel.x *= -1;
+                        self.vel.y = self.vel.y;
                         return;
                     }
                 }
@@ -47,8 +61,8 @@ impl CollisionRectangle {
                 if self.pos.x + self.width > obj.pos.x {
                     if self.pos.x + self.width < obj.pos.x + obj.width {
                         // Right collision is happening
-                        self.vel.x *= -1.0;
-                        self.vel.y = rng.gen_range(-0.01..0.01);
+                        self.vel.x *= -1;
+                        self.vel.y = self.vel.y;
                         return;
                     }
                 }
@@ -62,7 +76,7 @@ impl CollisionRectangle {
                 if self.pos.y > obj.pos.y - obj.height {
                     if self.pos.y < obj.pos.y {
                         // Up collision is happening
-                        self.vel.y *= -1.0;
+                        self.vel.y *= -1;
                         return;
                     }
                 }
@@ -70,7 +84,7 @@ impl CollisionRectangle {
                 if self.pos.y - self.height < obj.pos.y {
                     if self.pos.y - self.height > obj.pos.y - obj.height {
                         // Down collision is happening
-                        self.vel.y *= -1.0;
+                        self.vel.y *= -1;
                         return;
                     }
                 }
@@ -81,19 +95,19 @@ impl CollisionRectangle {
     }
 
     fn check_collision_screen(&mut self) {
-        if self.pos.y >= 1.0 {
-            if self.vel.y > 0.0 {
-                self.vel.y *= -1.0;
+        if self.pos.y >= HEIGHT as i32 {
+            if self.vel.y > 0 {
+                self.vel.y *= -1;
             }
-        } else if self.pos.y - self.height < -1.0 {
-            if self.vel.y < 0.0 {
-                self.vel.y *= -1.0;
+        } else if self.pos.y < 0 {
+            if self.vel.y < 0 {
+                self.vel.y *= -1;
             }
         }
     }
 
     fn is_game_over(&mut self) -> bool {
-        if self.pos.x - self.width * 2.0 >= 1.0 || self.pos.x + self.width * 2.0 < -1.0 {
+        if self.pos.x >= WIDTH as i32 || self.pos.x + self.width < 0 {
             return true;
         }
         return false;
@@ -101,43 +115,74 @@ impl CollisionRectangle {
 }
 
 fn main() {
-    let mut rng = rand::thread_rng();
-    let (mut frug_instance, event_loop) = frug::new("Pong!");
-
-    frug_instance.set_window_size(800.0, 800.0);
+    // Initialize context and create window
+    let context = frug::init().unwrap();
+    let mut canvas = frug::create_window(&context, WIDTH, HEIGHT);
 
     // our objects
-    let mut ball: CollisionRectangle = CollisionRectangle::new(-0.05, -0.05, 0.1, 0.1);
-    let mut opponent = CollisionRectangle::new(0.8, 0.2, 0.1, 0.5);
-    let mut player = CollisionRectangle::new(-0.9, 0.2, 0.1, 0.5);
+    let mut ball: CollisionRectangle =
+        CollisionRectangle::new((WIDTH / 2) as i32, (HEIGHT / 2) as i32, 20, 20);
+    let mut opponent = CollisionRectangle::new((WIDTH - 30) as i32, (HEIGHT / 2) as i32, 20, 100);
+    let mut player = CollisionRectangle::new(10, (HEIGHT / 2) as i32, 20, 100);
 
-    let update_function = move |instance: &mut frug::FrugInstance, input: &frug::InputHelper| {
-        let paddle_speed = 0.006;
+    let background_color = Color::RGB(50, 50, 50);
 
-        // start moving the ball if it's not moving
-        if input.key_pressed(frug::VirtualKeyCode::Return) {
-            if ball.vel.x == 0.0 {
-                let dir = if rng.gen_bool(0.5) { -1.0 } else { 1.0 };
-                ball.vel.x = 0.01 * dir;
+    canvas.set_draw_color(background_color);
+    canvas.clear();
+    canvas.present();
+
+    let mut event_pump = context.event_pump().unwrap();
+    let paddle_speed = 6;
+    let c_white = Color::RGB(255, 255, 255);
+    'running: loop {
+        // Pre-draw
+        canvas.set_draw_color(background_color);
+        canvas.clear();
+
+        // input
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit { .. }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Escape),
+                    ..
+                } => break 'running,
+                Event::KeyDown {
+                    keycode: Some(Keycode::Return),
+                    ..
+                } => {
+                    // start moving the ball if it's not moving
+                    if ball.vel.x == 0 {
+                        let dir = 1;
+                        ball.vel.x = 6 * dir;
+                    }
+                }
+                Event::KeyDown {
+                    keycode: Some(Keycode::Up),
+                    ..
+                } => {
+                    player.vel.y = -paddle_speed;
+                }
+                Event::KeyDown {
+                    keycode: Some(Keycode::Down),
+                    ..
+                } => {
+                    player.vel.y = paddle_speed;
+                }
+                _ => {
+                    player.vel.y = 0;
+                }
             }
         }
 
+        //              ** Game loop here **
         // move opponent
-        let opponent_y = opponent.pos.y - (opponent.height / 2.0);
-        let ball_y = ball.pos.y - (ball.height / 2.0);
+        let opponent_y = opponent.pos.y - (opponent.height / 2);
+        let ball_y = ball.pos.y - (ball.height / 2);
         if opponent_y > ball_y {
             opponent.vel.y = -paddle_speed;
         } else if opponent_y < ball_y {
             opponent.vel.y = paddle_speed;
-        }
-
-        // move player
-        player.vel.y = 0.0;
-        if input.key_held(frug::VirtualKeyCode::Up) {
-            player.vel.y += paddle_speed;
-        }
-        if input.key_held(frug::VirtualKeyCode::Down) {
-            player.vel.y -= paddle_speed;
         }
 
         // bounce ball in case of collision
@@ -148,10 +193,10 @@ fn main() {
         // check if it's game over
         if ball.is_game_over() {
             // restart ball
-            ball.pos.x = -0.05;
-            ball.pos.y = -0.05;
-            ball.vel.x = 0.0;
-            ball.vel.y = 0.0;
+            ball.pos.x = (WIDTH / 2) as i32;
+            ball.pos.y = (HEIGHT / 2) as i32;
+            ball.vel.x = 0;
+            ball.vel.y = 0;
         }
 
         // updates
@@ -159,34 +204,36 @@ fn main() {
         opponent.update_pos();
         player.update_pos();
 
-        // Rendering
-        instance.clear();
+        // reset player velocity
 
         // render objects
-        instance.add_colored_rect(
-            ball.pos.x,
-            ball.pos.y,
-            ball.width,
-            ball.height,
-            [1.0, 1.0, 1.0],
+        frug::draw_rectangle(
+            &mut canvas,
+            c_white,
+            ball.pos.x as i32,
+            ball.pos.y as i32,
+            ball.width as u32,
+            ball.height as u32,
         );
-        instance.add_colored_rect(
-            opponent.pos.x,
-            opponent.pos.y,
-            opponent.width,
-            opponent.height,
-            [1.0, 1.0, 1.0],
+        frug::draw_rectangle(
+            &mut canvas,
+            c_white,
+            player.pos.x as i32,
+            player.pos.y as i32,
+            player.width as u32,
+            player.height as u32,
         );
-        instance.add_colored_rect(
-            player.pos.x,
-            player.pos.y,
-            player.width,
-            player.height,
-            [1.0, 1.0, 1.0],
+        frug::draw_rectangle(
+            &mut canvas,
+            c_white,
+            opponent.pos.x as i32,
+            opponent.pos.y as i32,
+            opponent.width as u32,
+            opponent.height as u32,
         );
+        //              ** End of game loop **
 
-        instance.update_buffers();
-    };
-
-    frug_instance.run(event_loop, update_function);
+        canvas.present();
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+    }
 }

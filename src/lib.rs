@@ -23,11 +23,11 @@ pub fn init() -> Result<Sdl, Error> {
 }
 
 /// Returns a canvas where we can draw.
-pub fn create_window(sdl_context: &Sdl) -> Canvas<Window> {
+pub fn create_window(sdl_context: &Sdl, width: u32, height: u32) -> Canvas<Window> {
     let video_subsystem = sdl_context.video().unwrap();
 
     let window = video_subsystem
-        .window("FRUG Window", 800, 600)
+        .window("FRUG Window", width, height)
         .position_centered()
         .build()
         .unwrap();

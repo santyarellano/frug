@@ -4,7 +4,7 @@ use std::time::Duration;
 fn main() {
     let context = frug::init().unwrap();
 
-    let mut canvas = frug::create_window(&context);
+    let mut canvas = frug::create_window(&context, 800, 600);
 
     let texture_creator = canvas.texture_creator();
     let texture = match texture_creator.load_texture("examples/other_frog.png") {
