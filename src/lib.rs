@@ -5,6 +5,7 @@
 //! I'M MIGRATING THIS WHOLE THING FROM WGPU TO SDL3. PLEASE HOLD ON!!!
 
 pub use sdl3::event::Event;
+pub use sdl3::image::LoadTexture;
 pub use sdl3::keyboard::Keycode;
 pub use sdl3::pixels::Color;
 pub use sdl3::surface::Surface;
@@ -46,28 +47,6 @@ pub fn draw_rectangle(
 ) {
     canvas.set_draw_color(color);
     let _ = canvas.fill_rect(Rect::new(x, y, width, height));
-}
-
-/// Loads a texture from a file and returns it.
-pub fn load_texture<'a>(
-    texture_creator: &'a TextureCreator<WindowContext>,
-    file_path: &str,
-) -> Result<Texture<'a>, String> {
-    let surface = match Surface::load_bmp(file_path) {
-        Ok(surface) => surface,
-        Err(e) => {
-            return Err(format!(
-                "could not load file: {}, with error: {}",
-                file_path, e
-            ));
-        }
-    };
-    let texture = match texture_creator.create_texture_from_surface(surface) {
-        Ok(texture) => texture,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    Ok(texture)
 }
 
 /// Draws a rectangle with a given texture on the given canvas at the specified position and dimensions.

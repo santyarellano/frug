@@ -1,5 +1,4 @@
-use frug::{self, Color, Event, Keycode};
-use sdl3::image::LoadTexture;
+use frug::{self, Color, Event, Keycode, LoadTexture};
 use std::time::Duration;
 
 fn main() {
