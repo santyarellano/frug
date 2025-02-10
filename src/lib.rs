@@ -11,9 +11,9 @@ pub use sdl3::pixels::Color;
 pub use sdl3::surface::Surface;
 
 use sdl3::rect::Rect;
+use sdl3::render::Canvas;
 use sdl3::render::Texture;
-use sdl3::render::{Canvas, TextureCreator};
-use sdl3::video::{Window, WindowContext};
+use sdl3::video::Window;
 use sdl3::{Error, Sdl};
 
 /// Inits frug and returns the context.

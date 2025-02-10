@@ -42,51 +42,25 @@ impl CollisionRectangle {
 
     /// This function will only work for the ball!
     fn check_collision(&mut self, obj: &CollisionRectangle) {
-        let tolerance_w = (0.15 * self.width as f32).ceil() as i32; // percentage of shape
-        let tolerance_h = (0.15 * self.height as f32).ceil() as i32; // percentage of shape
-
         // Horizontal collision
-        if self.pos.y - tolerance_h > obj.pos.y - obj.height {
-            if self.pos.y - tolerance_h < obj.pos.y {
-                // give priority for horizontal collision
-                if self.pos.x < obj.pos.x + obj.width {
-                    if self.pos.x > obj.pos.x {
-                        // Left collision is happening
-                        self.vel.x *= -1;
-                        self.vel.y = self.vel.y;
-                        return;
-                    }
+        if self.pos.x < obj.pos.x + obj.width && self.pos.x + self.width > obj.pos.x {
+            if self.pos.y < obj.pos.y + obj.height && self.pos.y + self.height > obj.pos.y {
+                // Horizontal collision
+                if self.pos.x + self.width / 2 < obj.pos.x + obj.width / 2 {
+                    // Left collision
+                    self.vel.x = -self.vel.x.abs();
+                } else {
+                    // Right collision
+                    self.vel.x = self.vel.x.abs();
                 }
 
-                if self.pos.x + self.width > obj.pos.x {
-                    if self.pos.x + self.width < obj.pos.x + obj.width {
-                        // Right collision is happening
-                        self.vel.x *= -1;
-                        self.vel.y = self.vel.y;
-                        return;
-                    }
-                }
-            }
-        }
-
-        // Vertical collision
-        if self.pos.x + tolerance_w < obj.pos.x - obj.width {
-            if self.pos.x + tolerance_w > obj.pos.x {
-                // give priority for vertical collision
-                if self.pos.y > obj.pos.y - obj.height {
-                    if self.pos.y < obj.pos.y {
-                        // Up collision is happening
-                        self.vel.y *= -1;
-                        return;
-                    }
-                }
-
-                if self.pos.y - self.height < obj.pos.y {
-                    if self.pos.y - self.height > obj.pos.y - obj.height {
-                        // Down collision is happening
-                        self.vel.y *= -1;
-                        return;
-                    }
+                // Vertical collision
+                if self.pos.y + self.height / 2 < obj.pos.y + obj.height / 2 {
+                    // Top collision
+                    self.vel.y = -self.vel.y.abs();
+                } else {
+                    // Bottom collision
+                    self.vel.y = self.vel.y.abs();
                 }
             }
         }
@@ -155,6 +129,7 @@ fn main() {
                     if ball.vel.x == 0 {
                         let dir = 1;
                         ball.vel.x = 6 * dir;
+                        ball.vel.y = 6 * -dir;
                     }
                 }
                 Event::KeyDown {
@@ -177,12 +152,14 @@ fn main() {
 
         //              ** Game loop here **
         // move opponent
-        let opponent_y = opponent.pos.y - (opponent.height / 2);
-        let ball_y = ball.pos.y - (ball.height / 2);
-        if opponent_y > ball_y {
+        let opponent_center_y = opponent.pos.y + (opponent.height / 2);
+        let ball_center_y = ball.pos.y + (ball.height / 2);
+        if opponent_center_y > ball_center_y {
             opponent.vel.y = -paddle_speed;
-        } else if opponent_y < ball_y {
+        } else if opponent_center_y < ball_center_y {
             opponent.vel.y = paddle_speed;
+        } else {
+            opponent.vel.y = 0;
         }
 
         // bounce ball in case of collision
