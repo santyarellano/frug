@@ -1,25 +1,15 @@
-use std::time::Duration;
-
-use frug::{self, Color, Event, Keycode};
+use frug::{Color, Event, FrugInstance, Keycode};
 
 fn main() {
-    let context = frug::init().unwrap();
-    let mut canvas = frug::create_window(&context, 800, 600);
-    let background_color = Color::RGB(50, 50, 50);
+    let mut frug_instance = FrugInstance::new("Spritesheet Example", 800, 600);
 
-    canvas.set_draw_color(background_color);
-    canvas.clear();
-    canvas.present();
-
-    let mut event_pump = context.event_pump().unwrap();
     'running: loop {
-        // Clear the canvas
-        canvas.set_draw_color(background_color);
-        canvas.clear();
+        frug_instance.clear();
 
-        // input
-        for event in event_pump.poll_iter() {
+        // get input
+        for event in frug_instance.get_events() {
             match event {
+                // Quit the application
                 Event::Quit { .. }
                 | Event::KeyDown {
                     keycode: Some(Keycode::Escape),
@@ -29,11 +19,9 @@ fn main() {
             }
         }
 
-        // ** Game loop here **
-        frug::draw_rectangle(&mut canvas, Color::RGB(100, 100, 255), 50, 50, 100, 100);
-        // ** End of game loop **
+        // Draw a sprite from the spritesheet
+        frug_instance.draw_rect(50, 50, 100, 70, Color::RGB(255, 0, 0));
 
-        canvas.present();
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        frug_instance.present();
     }
 }
