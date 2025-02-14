@@ -13,7 +13,7 @@ pub use sdl3::pixels::Color;
 use sdl3::rect::Rect;
 use sdl3::render::{Canvas, Texture, TextureCreator};
 use sdl3::video::{Window, WindowContext};
-use sdl3::{Error, Sdl};
+use sdl3::Sdl;
 
 pub struct FrugInstance {
     context: Sdl,
