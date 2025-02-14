@@ -6,10 +6,10 @@
 
 pub use sdl3::event::Event;
 pub use sdl3::event::EventPollIterator;
+pub use sdl3::image::LoadTexture;
 pub use sdl3::keyboard::Keycode;
 pub use sdl3::pixels::Color;
 
-use sdl3::image::LoadTexture;
 use sdl3::rect::Rect;
 use sdl3::render::{Canvas, Texture, TextureCreator};
 use sdl3::video::{Window, WindowContext};
@@ -18,7 +18,6 @@ use sdl3::{Error, Sdl};
 pub struct FrugInstance {
     context: Sdl,
     canvas: Canvas<Window>,
-    texture_creator: TextureCreator<WindowContext>,
 }
 
 impl FrugInstance {
@@ -33,13 +32,12 @@ impl FrugInstance {
             .unwrap();
 
         let canvas = window.into_canvas();
-        let texture_creator = canvas.texture_creator();
 
-        FrugInstance {
-            context,
-            canvas,
-            texture_creator,
-        }
+        FrugInstance { context, canvas }
+    }
+
+    pub fn new_texture_creator(&self) -> TextureCreator<WindowContext> {
+        self.canvas.texture_creator()
     }
 
     pub fn clear(&mut self) {
@@ -55,10 +53,6 @@ impl FrugInstance {
         self.canvas.set_draw_color(color);
         let rect = Rect::new(x, y, width, height);
         self.canvas.fill_rect(rect).unwrap();
-    }
-
-    pub fn load_image(&mut self, path: &str) -> Result<Texture, Error> {
-        self.texture_creator.load_texture(path)
     }
 
     pub fn draw_image(&mut self, texture: &Texture, x: i32, y: i32, width: u32, height: u32) {

@@ -1,20 +1,27 @@
-use frug::Graphics;
+use frug::{Color, Event, FrugInstance, Keycode};
 
 fn main() {
-    let mut graphics = Graphics::new("Spritesheet Example", 800, 600);
+    let mut frug_instance = FrugInstance::new("Spritesheet Example", 800, 600);
 
-    /*let spritesheet = match graphics.load_image("path/to/spritesheet.png") {
-        Ok(image) => image,
-        Err(e) => {
-            eprintln!("Failed to load spritesheet: {}", e);
-            return;
+    // load the spritesheet
+    let spritesheet = frug_instance.load_image("path/to/spritesheet.png");
+
+    'running: loop {
+        // Input
+        for event in frug_instance.get_events() {
+            match event {
+                // Quit the application
+                Event::Quit { .. }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Escape),
+                    ..
+                } => break 'running,
+                _ => {}
+            }
         }
-    };*/
 
-    graphics.clear();
-
-    // Draw a sprite from the spritesheet
-    graphics.draw_sprite(&spritesheet, 0, 0, 32, 32, 100, 100, 64, 64);
-
-    graphics.present();
+        // Render
+        frug_instance.clear();
+        frug_instance.present();
+    }
 }
