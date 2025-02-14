@@ -1,17 +1,10 @@
-use frug::{Event, FrugInstance, Keycode, LoadTexture};
+use frug::{Color, Event, FrugInstance, Keycode};
 
 fn main() {
     let mut frug_instance = FrugInstance::new("Spritesheet Example", 800, 600);
 
     // load the spritesheet
-    let texture_creator = frug_instance.new_texture_creator();
-    let texture = match texture_creator.load_texture("examples/frog.png") {
-        Ok(image) => image,
-        Err(e) => {
-            eprintln!("Failed to load texture: {}", e);
-            return;
-        }
-    };
+    let spritesheet = frug_instance.load_image("path/to/spritesheet.png");
 
     'running: loop {
         // Input
@@ -29,7 +22,6 @@ fn main() {
 
         // Render
         frug_instance.clear();
-        frug_instance.draw_image(&texture, 0, 0, 800, 600);
         frug_instance.present();
     }
 }

@@ -1,19 +1,25 @@
-use frug::FrugInstance;
-
-extern crate frug;
+use frug::{Color, Event, FrugInstance, Keycode};
 
 fn main() {
-    let (frug_instance, event_loop) = frug::new("My Window");
+    let mut frug_instance = FrugInstance::new("Spritesheet Example", 800, 600);
 
-    let mut x = 0.0;
+    'running: loop {
+        // Input
+        for event in frug_instance.get_events() {
+            match event {
+                // Quit the application
+                Event::Quit { .. }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Escape),
+                    ..
+                } => break 'running,
+                _ => {}
+            }
+        }
 
-    let update_function = move |instance: &mut FrugInstance, _input: &frug::InputHelper| {
-        instance.clear();
-        instance.add_colored_rect(x, 0.0, 0.5, 0.5, [0.0, 0.5, 0.5]);
-        instance.update_buffers();
-
-        x += 0.001;
-    };
-
-    frug_instance.run(event_loop, update_function);
+        // Render
+        frug_instance.clear();
+        frug_instance.draw_rect(50, 50, 100, 70, Color::RGB(255, 0, 0));
+        frug_instance.present();
+    }
 }
