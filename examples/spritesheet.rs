@@ -1,7 +1,7 @@
-use frug::{Color, Event, FrugInstance, Keycode};
+use frug::{Color, Event, Instance, Keycode};
 
 fn main() {
-    let mut frug_instance = FrugInstance::new("Spritesheet Example", 800, 600);
+    let mut frug_instance = Instance::new("Spritesheet Example", 800, 600);
 
     // load the spritesheet
     let spritesheet = frug_instance.load_image("path/to/spritesheet.png");
