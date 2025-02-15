@@ -1,7 +1,7 @@
-use frug::{Event, FrugInstance, Keycode, LoadTexture};
+use frug::{Event, Instance, Keycode, LoadTexture};
 
 fn main() {
-    let mut frug_instance = FrugInstance::new("Spritesheet Example", 800, 600);
+    let mut frug_instance = Instance::new("Spritesheet Example", 800, 600);
 
     // load the spritesheet
     let texture_creator = frug_instance.new_texture_creator();
@@ -29,7 +29,7 @@ fn main() {
 
         // Render
         frug_instance.clear();
-        frug_instance.draw_image(&texture, 0, 0, 800, 600);
+        frug_instance.draw_image(&texture, 200, 200, 200, 200);
         frug_instance.present();
     }
 }
