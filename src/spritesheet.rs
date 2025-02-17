@@ -16,9 +16,6 @@ impl<'a> Spritesheet<'a> {
         rect_width: u32,
         rect_height: u32,
     ) -> Self {
-        let rect_width = width / columns;
-        let rect_height = height / rows;
-
         Spritesheet {
             texture,
             rows,
