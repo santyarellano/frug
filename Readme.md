@@ -8,4 +8,6 @@ FRUG is intended to provide a similar abstraction layer over graphics programmin
 
 Please check out [the documentation](https://santyarellano.github.io/frug_book/) to learn more about the project and how to use it! (there is also the cargo documentation, but I'm afraid that part is not as polished for now)
 
-> On a side note, please take into account that the project is in it's first iteration and many features are still under development or missing. Feel free to leave your comments and evaluation in the [following survey](https://forms.gle/m2h7v2wkjwFTpUrP7)!
+> I'm currently migrating this whole thing to work more like what monogame is for C#. So I'm changing this so instead of using WGPU we'll use SDL3 (rust API) and hopefully I'll find some way to make it work with game consoles as well.
+
+> On a side note, please take into account that the project is in it's first iteration and many features are still under development or missing.
