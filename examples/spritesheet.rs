@@ -1,10 +1,23 @@
-use frug::{Color, Event, Instance, Keycode};
+use frug::{Event, Instance, Keycode, LoadTexture, Rect, Sprite};
+
+enum Animation {
+    Idle,
+    Walk,
+}
 
 fn main() {
     let mut frug_instance = Instance::new("Spritesheet Example", 800, 600);
+    let texture_creator = frug_instance.new_texture_creator();
 
     // load the spritesheet
-    let spritesheet = frug_instance.load_image("path/to/spritesheet.png");
+    let texture = match texture_creator.load_texture("examples/platformer_imgs/frog/frogo.png") {
+        Ok(image) => image,
+        Err(e) => {
+            eprintln!("Failed to load texture: {}", e);
+            return;
+        }
+    };
+    let mut sprite = Sprite::new(texture, 2, vec![6, 4], 52, 50);
 
     'running: loop {
         // Input
@@ -20,8 +33,14 @@ fn main() {
             }
         }
 
+        // Update
+        sprite.update();
+
         // Render
         frug_instance.clear();
+        frug_instance.draw_sprite(&sprite, 200, 200);
         frug_instance.present();
+
+        std::thread::sleep(std::time::Duration::from_millis(100));
     }
 }

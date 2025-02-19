@@ -5,6 +5,8 @@ use sdl3::render::{Canvas, Texture, TextureCreator};
 use sdl3::video::{Window, WindowContext};
 use sdl3::Sdl;
 
+use crate::sprite::Sprite;
+
 pub struct Instance {
     context: Sdl,
     canvas: Canvas<Window>,
@@ -57,7 +59,8 @@ impl Instance {
         // SDL3 does not support shaders directly, you might need to use OpenGL or another library
     }
 
-    pub fn draw_sprite(
+    /// Draws from a texture into a destination rectangle in the canvas.
+    pub fn draw(
         &mut self,
         texture: &Texture,
         src_x: i32,
@@ -74,6 +77,20 @@ impl Instance {
         if let Err(e) = self.canvas.copy(texture, src_rect, dest_rect) {
             eprintln!("Error drawing sprite: {}", e);
         }
+    }
+
+    pub fn draw_sprite(&mut self, sprite: &Sprite, x: i32, y: i32) {
+        self.draw(
+            &sprite.texture,
+            sprite.drawing_rect.x(),
+            sprite.drawing_rect.y(),
+            sprite.drawing_rect.width(),
+            sprite.drawing_rect.width(),
+            x,
+            y,
+            sprite.drawing_rect.width(),
+            sprite.drawing_rect.width(),
+        );
     }
 
     pub fn get_events(&mut self) -> Vec<Event> {

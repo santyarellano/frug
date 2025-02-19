@@ -5,7 +5,7 @@
 //! I'M MIGRATING THIS WHOLE THING FROM WGPU TO SDL3. PLEASE HOLD ON!!!
 
 mod instance;
-mod spritesheet;
+mod sprite;
 
 pub use instance::Instance;
 pub use sdl3::event::Event;
@@ -13,3 +13,5 @@ pub use sdl3::event::EventPollIterator;
 pub use sdl3::image::LoadTexture;
 pub use sdl3::keyboard::Keycode;
 pub use sdl3::pixels::Color;
+pub use sdl3::rect::Rect;
+pub use sprite::Sprite;
