@@ -1,22 +1,20 @@
-use frug::{Event, Instance, Keycode, LoadTexture, Rect, Sprite, Vec2d};
-
-enum Animation {
-    Idle,
-    Walk,
-}
+use frug::{Event, Instance, Keycode, LoadTexture, ScaleMode, Sprite, Vec2d};
 
 fn main() {
     let mut frug_instance = Instance::new("Spritesheet Example", 800, 600);
     let texture_creator = frug_instance.new_texture_creator();
 
     // load the spritesheet
-    let texture = match texture_creator.load_texture("examples/platformer_imgs/frog/frogo.png") {
+    texture_creator.default_pixel_format();
+    let mut texture = match texture_creator.load_texture("examples/platformer_imgs/frog/frogo.png")
+    {
         Ok(image) => image,
         Err(e) => {
             eprintln!("Failed to load texture: {}", e);
             return;
         }
     };
+    texture.set_scale_mode(ScaleMode::Nearest); // to avoid blurring
 
     let mut sprite = Sprite::new(texture, 2, vec![6, 4], 52, 50);
 
