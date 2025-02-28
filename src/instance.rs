@@ -6,6 +6,7 @@ use sdl3::video::{Window, WindowContext};
 use sdl3::Sdl;
 
 use crate::sprite::Sprite;
+use crate::Vec2d;
 
 pub struct Instance {
     context: Sdl,
@@ -63,8 +64,7 @@ impl Instance {
     pub fn draw(
         &mut self,
         texture: &Texture,
-        src_x: i32,
-        src_y: i32,
+        src: Vec2d<i32>,
         src_width: u32,
         src_height: u32,
         dest_x: i32,
@@ -72,24 +72,24 @@ impl Instance {
         dest_width: u32,
         dest_height: u32,
     ) {
-        let src_rect = Rect::new(src_x, src_y, src_width, src_height);
+        let src_rect = Rect::new(src.x, src.y, src_width, src_height);
         let dest_rect = Rect::new(dest_x, dest_y, dest_width, dest_height);
         if let Err(e) = self.canvas.copy(texture, src_rect, dest_rect) {
             eprintln!("Error drawing sprite: {}", e);
         }
     }
 
-    pub fn draw_sprite(&mut self, sprite: &Sprite, x: i32, y: i32) {
+    pub fn draw_sprite(&mut self, sprite: &Sprite, position: Vec2d<i32>) {
         self.draw(
             &sprite.texture,
             sprite.drawing_rect.x(),
             sprite.drawing_rect.y(),
             sprite.drawing_rect.width(),
             sprite.drawing_rect.width(),
-            x,
-            y,
-            sprite.drawing_rect.width(),
-            sprite.drawing_rect.width(),
+            position.x,
+            position.y,
+            sprite.drawing_rect.width() * 2,
+            sprite.drawing_rect.width() * 2,
         );
     }
 

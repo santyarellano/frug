@@ -17,7 +17,9 @@ fn main() {
             return;
         }
     };
+
     let mut sprite = Sprite::new(texture, 2, vec![6, 4], 52, 50);
+    sprite.start_animation(Animation::Idle as u32);
 
     'running: loop {
         // Input

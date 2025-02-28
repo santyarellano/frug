@@ -1,4 +1,4 @@
-use sdl3::render::{Canvas, Texture};
+use sdl3::render::Texture;
 
 /// This struct will assume that there is a row per "animation".
 /// `frames_in_rows` will contain the number of frames per each row.
