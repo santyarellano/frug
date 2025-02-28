@@ -64,7 +64,7 @@ impl Instance {
     pub fn draw(
         &mut self,
         texture: &Texture,
-        src: Vec2d<i32>,
+        src_pos: Vec2d<i32>,
         src_width: u32,
         src_height: u32,
         dest_x: i32,
@@ -72,7 +72,7 @@ impl Instance {
         dest_width: u32,
         dest_height: u32,
     ) {
-        let src_rect = Rect::new(src.x, src.y, src_width, src_height);
+        let src_rect = Rect::new(src_pos.x, src_pos.y, src_width, src_height);
         let dest_rect = Rect::new(dest_x, dest_y, dest_width, dest_height);
         if let Err(e) = self.canvas.copy(texture, src_rect, dest_rect) {
             eprintln!("Error drawing sprite: {}", e);
@@ -82,8 +82,10 @@ impl Instance {
     pub fn draw_sprite(&mut self, sprite: &Sprite, position: Vec2d<i32>) {
         self.draw(
             &sprite.texture,
-            sprite.drawing_rect.x(),
-            sprite.drawing_rect.y(),
+            Vec2d {
+                x: sprite.drawing_rect.x,
+                y: sprite.drawing_rect.y,
+            },
             sprite.drawing_rect.width(),
             sprite.drawing_rect.width(),
             position.x,

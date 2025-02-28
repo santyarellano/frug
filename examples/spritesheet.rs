@@ -1,4 +1,4 @@
-use frug::{Event, Instance, Keycode, LoadTexture, Rect, Sprite};
+use frug::{Event, Instance, Keycode, LoadTexture, Rect, Sprite, Vec2d};
 
 enum Animation {
     Idle,
@@ -40,7 +40,7 @@ fn main() {
 
         // Render
         frug_instance.clear();
-        frug_instance.draw_sprite(&sprite, 200, 200);
+        frug_instance.draw_sprite(&sprite, Vec2d { x: 200, y: 200 });
         frug_instance.present();
 
         std::thread::sleep(std::time::Duration::from_millis(100));
