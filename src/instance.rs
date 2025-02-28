@@ -42,9 +42,9 @@ impl Instance {
         self.canvas.present();
     }
 
-    pub fn draw_rect(&mut self, x: i32, y: i32, width: u32, height: u32, color: Color) {
+    pub fn draw_rect(&mut self, pos: &Vec2d<i32>, size: &Vec2d<u32>, color: Color) {
         self.canvas.set_draw_color(color);
-        let rect = Rect::new(x, y, width, height);
+        let rect = Rect::new(pos.x, pos.y, size.x, size.y);
         self.canvas.fill_rect(rect).unwrap();
     }
 
@@ -64,34 +64,34 @@ impl Instance {
     pub fn draw(
         &mut self,
         texture: &Texture,
-        src_pos: Vec2d<i32>,
-        src_width: u32,
-        src_height: u32,
-        dest_x: i32,
-        dest_y: i32,
-        dest_width: u32,
-        dest_height: u32,
+        src_pos: &Vec2d<i32>,
+        src_dimensions: &Vec2d<u32>,
+        dest_pos: &Vec2d<i32>,
+        dest_dimensions: &Vec2d<u32>,
     ) {
-        let src_rect = Rect::new(src_pos.x, src_pos.y, src_width, src_height);
-        let dest_rect = Rect::new(dest_x, dest_y, dest_width, dest_height);
+        let src_rect = Rect::new(src_pos.x, src_pos.y, src_dimensions.x, src_dimensions.y);
+        let dest_rect = Rect::new(dest_pos.x, dest_pos.y, dest_dimensions.x, dest_dimensions.y);
         if let Err(e) = self.canvas.copy(texture, src_rect, dest_rect) {
             eprintln!("Error drawing sprite: {}", e);
         }
     }
 
-    pub fn draw_sprite(&mut self, sprite: &Sprite, position: Vec2d<i32>) {
+    pub fn draw_sprite(&mut self, sprite: &Sprite, position: &Vec2d<i32>, scale: &Vec2d<u32>) {
         self.draw(
             &sprite.texture,
-            Vec2d {
+            &Vec2d {
                 x: sprite.drawing_rect.x,
                 y: sprite.drawing_rect.y,
             },
-            sprite.drawing_rect.width(),
-            sprite.drawing_rect.width(),
-            position.x,
-            position.y,
-            sprite.drawing_rect.width() * 2,
-            sprite.drawing_rect.width() * 2,
+            &Vec2d {
+                x: sprite.drawing_rect.width(),
+                y: sprite.drawing_rect.width(),
+            },
+            position,
+            &Vec2d {
+                x: sprite.drawing_rect.width() * scale.x,
+                y: sprite.drawing_rect.width() * scale.y,
+            },
         );
     }
 

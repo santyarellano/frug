@@ -19,7 +19,9 @@ fn main() {
     };
 
     let mut sprite = Sprite::new(texture, 2, vec![6, 4], 52, 50);
-    sprite.start_animation(Animation::Idle as u32);
+
+    let sprite_pos = Vec2d { x: 250, y: 250 };
+    let sprite_scale = Vec2d { x: 2, y: 2 };
 
     'running: loop {
         // Input
@@ -40,7 +42,7 @@ fn main() {
 
         // Render
         frug_instance.clear();
-        frug_instance.draw_sprite(&sprite, Vec2d { x: 200, y: 200 });
+        frug_instance.draw_sprite(&sprite, &sprite_pos, &sprite_scale);
         frug_instance.present();
 
         std::thread::sleep(std::time::Duration::from_millis(100));
