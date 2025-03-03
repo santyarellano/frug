@@ -31,11 +31,11 @@ impl<'a> Sprite<'a> {
     }
 
     /// Sets the animation given a specific row at index 0.
-    pub fn start_animation(&mut self, row: u32) {
-        self.current_row = row;
+    pub fn start_animation(&mut self, row: &u32) {
+        self.current_row = *row;
         self.current_frame = 0;
         self.drawing_rect
-            .set_y(row as i32 * self.drawing_rect.height() as i32);
+            .set_y(*row as i32 * self.drawing_rect.height() as i32);
     }
 
     /// Updates the sprite's current frame.

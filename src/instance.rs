@@ -85,12 +85,12 @@ impl Instance {
             },
             &Vec2d {
                 x: sprite.drawing_rect.width(),
-                y: sprite.drawing_rect.width(),
+                y: sprite.drawing_rect.height(),
             },
             position,
             &Vec2d {
                 x: sprite.drawing_rect.width() * scale.x,
-                y: sprite.drawing_rect.width() * scale.y,
+                y: sprite.drawing_rect.height() * scale.y,
             },
         );
     }
