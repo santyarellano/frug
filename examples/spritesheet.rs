@@ -1,4 +1,4 @@
-use frug::{Event, Instance, Keycode, LoadTexture, ScaleMode, Sprite, Vec2d};
+use frug::{Color, Event, Instance, Keycode, LoadTexture, ScaleMode, Sprite, Vec2d};
 
 #[derive(PartialEq, Clone, Copy)]
 enum Animation {
@@ -9,6 +9,7 @@ enum Animation {
 fn main() {
     let mut frug_instance = Instance::new("Spritesheet Example", 800, 600);
     let texture_creator = frug_instance.new_texture_creator();
+    let background_color = Color::RGB(100, 100, 150);
 
     // load the spritesheet
     texture_creator.default_pixel_format();
@@ -59,7 +60,7 @@ fn main() {
         sprite.update();
 
         // Render
-        frug_instance.clear();
+        frug_instance.clear(background_color);
         frug_instance.draw_sprite(&sprite, &sprite_pos, &sprite_scale);
         frug_instance.present();
 

@@ -33,8 +33,8 @@ impl Instance {
         self.canvas.texture_creator()
     }
 
-    pub fn clear(&mut self) {
-        self.canvas.set_draw_color(Color::RGB(0, 0, 0));
+    pub fn clear(&mut self, color: Color) {
+        self.canvas.set_draw_color(color);
         self.canvas.clear();
     }
 
