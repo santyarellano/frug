@@ -50,6 +50,14 @@ impl Default for GameObject {
     }
 }
 
+fn check_reset_ball(ball: &mut GameObject, window_width: i32, window_height: i32) {
+    if ball.pos.x > window_width || (ball.pos.x + ball.size.x as i32) < 0 {
+        ball.pos.x = window_width / 2 - (ball.size.x / 2) as i32;
+        ball.vel.x *= -1;
+        ball.pos.y = window_height / 2 - (ball.size.y / 2) as i32;
+    }
+}
+
 fn main() {
     const WINDOW_WIDTH: u32 = 800;
     const WINDOW_HEIGHT: u32 = 600;
@@ -155,6 +163,7 @@ fn main() {
         player.update();
         enemy.update();
         ball.update();
+        check_reset_ball(&mut ball, WINDOW_WIDTH as i32, WINDOW_HEIGHT as i32);
 
         // Render
         frug_instance.clear(background_color);
