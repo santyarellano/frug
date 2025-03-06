@@ -23,6 +23,19 @@ impl GameObject {
     fn render(&self, instance: &mut Instance) {
         instance.draw_rect(&self.pos, &self.size, self.color);
     }
+
+    fn collide_w_object(&mut self, obj: &GameObject) {
+        // Check vertical range
+        if self.pos.y < obj.pos.y + obj.size.y as i32 && self.pos.y + self.size.y as i32 > obj.pos.y
+        {
+            // Check horizontal range
+            if self.pos.x < obj.pos.x + obj.size.x as i32
+                && self.pos.x + self.size.x as i32 > obj.pos.x
+            {
+                self.vel.x *= -1;
+            }
+        }
+    }
 }
 
 impl Default for GameObject {
@@ -32,7 +45,7 @@ impl Default for GameObject {
             size: Vec2d { x: 0, y: 0 },
             vel: Vec2d { x: 0, y: 0 },
             color: Color::RGB(255, 255, 255),
-            speed: 15,
+            speed: 2,
         }
     }
 }
@@ -128,6 +141,16 @@ fn main() {
             enemy.vel.y = enemy.speed;
         }
 
+        // ** Ball collisions **
+        // Vertical borders
+        if ball.pos.y <= 0 || ball.pos.y + ball.size.y as i32 >= WINDOW_HEIGHT as i32 {
+            ball.vel.y *= -1;
+        }
+        // With pallets
+        ball.collide_w_object(&player);
+        ball.collide_w_object(&enemy);
+        // ** Ball collisions **
+
         // Update
         player.update();
         enemy.update();
@@ -140,6 +163,6 @@ fn main() {
         ball.render(&mut frug_instance);
         frug_instance.present();
 
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        std::thread::sleep(std::time::Duration::from_millis(5));
     }
 }
