@@ -2,7 +2,7 @@
 name = "frug"
 version = "0.2.0"
 edition = "2021"
-description = "A simple and learnable graphics library for rust"
+description = "A simple and learnable gamedev library for rust"
 readme = "Readme.md"
 homepage = "https://santyarellano.github.io/frug_book/"
 repository = "https://github.com/santyarellano/frug"
@@ -13,4 +13,3 @@ keywords = ["gamedev", "graphics"]
 
 [dependencies]
 sdl3 = { version = "0.14.7", features = ["image"] }
-# image = "*"
