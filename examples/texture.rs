@@ -1,4 +1,4 @@
-use frug::{Color, Event, Instance, Keycode, LoadTexture};
+use frug::{Color, Event, Instance, Keycode, LoadTexture, Vec2d};
 
 fn main() {
     let mut frug_instance = Instance::new("Spritesheet Example", 800, 600);
@@ -30,7 +30,11 @@ fn main() {
 
         // Render
         frug_instance.clear(background_color);
-        frug_instance.draw_image(&texture, 200, 200, 200, 200);
+        frug_instance.draw_full_texture(
+            &texture,
+            &Vec2d { x: 200, y: 200 },
+            &Vec2d { x: 200, y: 200 },
+        );
         frug_instance.present();
     }
 }

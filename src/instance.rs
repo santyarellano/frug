@@ -8,12 +8,14 @@ use sdl3::Sdl;
 use crate::sprite::Sprite;
 use crate::Vec2d;
 
+/// Frug Instance. Holds the context and the canvas
 pub struct Instance {
     context: Sdl,
     canvas: Canvas<Window>,
 }
 
 impl Instance {
+    /// Creates a new frug instance and a window (given a title, width, and height)
     pub fn new(title: &str, width: u32, height: u32) -> Self {
         let context = sdl3::init().unwrap();
         let video_subsystem = context.video().unwrap();
@@ -29,39 +31,50 @@ impl Instance {
         Instance { context, canvas }
     }
 
+    /// Creates a texture creater which we can use to load textures.
     pub fn new_texture_creator(&self) -> TextureCreator<WindowContext> {
         self.canvas.texture_creator()
     }
 
+    /// Clears the canvas with a given color
     pub fn clear(&mut self, color: Color) {
         self.canvas.set_draw_color(color);
         self.canvas.clear();
     }
 
+    /// Renders all textures/shapes drawn into the canvas since it was last cleaned.
     pub fn present(&mut self) {
         self.canvas.present();
     }
 
+    /// Draws a rectangle given the position, size, and color
+    /// `pos`   - Defines the position of the rectangle
+    /// `size`  - Defines the dimensions of the rectangle (x = width, y = height)
+    /// `color` - Color
     pub fn draw_rect(&mut self, pos: &Vec2d<i32>, size: &Vec2d<u32>, color: Color) {
         self.canvas.set_draw_color(color);
         let rect = Rect::new(pos.x, pos.y, size.x, size.y);
         self.canvas.fill_rect(rect).unwrap();
     }
 
-    pub fn draw_image(&mut self, texture: &Texture, x: i32, y: i32, width: u32, height: u32) {
-        let rect = Rect::new(x, y, width, height);
+    /// Draws a texture
+    /// `texture`   - Defines the texture to use.
+    /// `pos`       - Defines the position of the image to draw.
+    /// `size`      - Defines the dimensions of the image rectangle (x = width, y = height)
+    pub fn draw_full_texture(&mut self, texture: &Texture, pos: &Vec2d<i32>, size: &Vec2d<u32>) {
+        let rect = Rect::new(pos.x, pos.y, size.x, size.y);
         self.canvas
             .copy(texture, None, Some(rect).map(|r| r.into()))
             .unwrap();
     }
 
-    pub fn use_shader(&mut self, _shader_code: &str) {
-        // Custom shader implementation goes here
-        // SDL3 does not support shaders directly, you might need to use OpenGL or another library
-    }
-
     /// Draws from a texture into a destination rectangle in the canvas.
-    pub fn draw(
+    /// `texture` - Defines the texture to use.
+    /// `src_pos` - Defines the starting point of the rectangular section of the texture to draw onto the canvas.
+    /// `src_dimensions` - Defines the dimensions of the rectangular section of the texture to draw onto the canvas.
+    /// `dest_pos` - Defines the starting point of the rectangular section of the canvas where the texture will be drawn.
+    /// `dest_dimensions` - Defines the dimensions of the rectangular section of the canvas where the texture will be drawn.
+    pub fn draw_texture(
         &mut self,
         texture: &Texture,
         src_pos: &Vec2d<i32>,
@@ -76,8 +89,12 @@ impl Instance {
         }
     }
 
+    /// Draws a given sprite in its current frame.
+    /// `sprite`    - The sprite object to use.
+    /// `position`  - Defines the position on the canvas where we want to draw the sprite.
+    /// `scale`     - Defines the scale of the sprite to draw.
     pub fn draw_sprite(&mut self, sprite: &Sprite, position: &Vec2d<i32>, scale: &Vec2d<u32>) {
-        self.draw(
+        self.draw_texture(
             &sprite.texture,
             &Vec2d {
                 x: sprite.drawing_rect.x,
@@ -95,6 +112,7 @@ impl Instance {
         );
     }
 
+    /// Returns a vector containing all the events captured during the current call of this method.
     pub fn get_events(&mut self) -> Vec<Event> {
         let mut event_pump = self.context.event_pump().unwrap();
         return event_pump.poll_iter().collect::<Vec<_>>();
