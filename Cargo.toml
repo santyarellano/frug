@@ -1,6 +1,6 @@
 [package]
 name = "frug"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 description = "A simple and learnable gamedev library for rust"
 readme = "Readme.md"
@@ -9,7 +9,6 @@ repository = "https://github.com/santyarellano/frug"
 license = "MIT"
 keywords = ["gamedev", "graphics"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sdl3 = { version = "0.14.7", features = ["image"] }
+sdl3 = { version = "0.14.15", features = ["image"] }
