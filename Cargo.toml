@@ -11,4 +11,4 @@ keywords = ["gamedev", "graphics"]
 
 
 [dependencies]
-sdl3 = { version = "0.14.15", features = ["image"] }
+sdl3 = { version = "0.14.16", features = ["image", "ttf"] }
