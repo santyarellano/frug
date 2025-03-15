@@ -12,7 +12,7 @@ fn main() {
     let font_scale = 7.0;
     let font_size = 8.0 * font_scale;
     let text = "FRUG!";
-    let text_color = Color::RGB(255, 255, 255);
+    let text_color = Color::RGB(100, 255, 100);
 
     // create the font
     let font = match ttf_context.load_font("examples/PressStart2P-Regular.ttf", font_size) {
