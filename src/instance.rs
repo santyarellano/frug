@@ -2,6 +2,7 @@ use sdl3::event::Event;
 use sdl3::pixels::Color;
 use sdl3::rect::Rect;
 use sdl3::render::{Canvas, Texture, TextureCreator};
+use sdl3::ttf::{Font, Sdl3TtfContext};
 use sdl3::video::{Window, WindowContext};
 use sdl3::Sdl;
 
@@ -34,6 +35,12 @@ impl Instance {
     /// Creates a texture creater which we can use to load textures.
     pub fn new_texture_creator(&self) -> TextureCreator<WindowContext> {
         self.canvas.texture_creator()
+    }
+
+    /// Create a ttf context which we can use to load fonts.
+    /// Returns an error if the context could not be created.
+    pub fn new_ttf_context(&self) -> Result<Sdl3TtfContext, String> {
+        sdl3::ttf::init().map_err(|e| e.to_string())
     }
 
     /// Clears the canvas with a given color
@@ -87,6 +94,30 @@ impl Instance {
         if let Err(e) = self.canvas.copy(texture, src_rect, dest_rect) {
             eprintln!("Error drawing sprite: {}", e);
         }
+    }
+
+    /// Creates a texture from a given font and a given text.
+    /// `font` - The font to use.
+    /// `text` - The text to render.
+    /// `color` - The color of the text.
+    /// `texture_creator` - The texture creator to use.
+    pub fn create_text_texture<'a>(
+        &mut self,
+        font: &Font,
+        text: &str,
+        color: &Color,
+        texture_creator: &'a TextureCreator<WindowContext>,
+    ) -> Result<Texture<'a>, String> {
+        let surface = match font.render(text).blended(*color) {
+            Ok(surface) => surface,
+            Err(e) => return Err(format!("Failed to create surface for text texture: {}", e)),
+        };
+
+        let texture = texture_creator
+            .create_texture_from_surface(&surface)
+            .map_err(|e| format!("Failed to create text texture from surface: {}", e))?;
+
+        Ok(texture)
     }
 
     /// Draws a given sprite in its current frame.
