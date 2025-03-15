@@ -11,7 +11,7 @@ fn main() {
     // text settings
     let font_scale = 7.0;
     let font_size = 8.0 * font_scale;
-    let text = "I love Mafy!";
+    let text = "FRUG!";
     let text_color = Color::RGB(255, 255, 255);
 
     // create the font
