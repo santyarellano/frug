@@ -45,7 +45,7 @@ impl Default for GameObject {
             size: Vec2d { x: 0, y: 0 },
             vel: Vec2d { x: 0, y: 0 },
             color: Color::RGB(255, 255, 255),
-            speed: 2,
+            speed: 4,
         }
     }
 }
@@ -61,6 +61,8 @@ fn check_reset_ball(ball: &mut GameObject, window_width: i32, window_height: i32
 fn main() {
     const WINDOW_WIDTH: u32 = 800;
     const WINDOW_HEIGHT: u32 = 600;
+    const TARGET_FPS: u32 = 60;
+    const FRAME_TIME: f32 = 1000.0 / TARGET_FPS as f32;
 
     let mut frug_instance = Instance::new("Pong", WINDOW_WIDTH, WINDOW_HEIGHT);
     let background_color = Color::RGB(0, 0, 0);
@@ -100,6 +102,9 @@ fn main() {
     let mut player_down = 0;
 
     'running: loop {
+        // Update time/fps control variables
+        let start_time = std::time::Instant::now();
+
         // Input
         for event in frug_instance.get_events() {
             match event {
@@ -172,6 +177,11 @@ fn main() {
         ball.render(&mut frug_instance);
         frug_instance.present();
 
-        std::thread::sleep(std::time::Duration::from_millis(5));
+        // Control FPS
+        let elapsed_time = start_time.elapsed();
+        let sleep_time = FRAME_TIME - elapsed_time.as_millis() as f32;
+        if sleep_time > 0.0 {
+            std::thread::sleep(std::time::Duration::from_millis(sleep_time as u64));
+        }
     }
 }
