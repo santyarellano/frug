@@ -17,5 +17,6 @@ pub use sdl3::pixels::Color;
 pub use sdl3::rect::Rect;
 pub use sdl3::render::ScaleMode;
 pub use sdl3::render::TextureQuery;
+pub use sdl3::ttf;
 pub use sprite::Sprite;
 pub use vectors::Vec2d;
