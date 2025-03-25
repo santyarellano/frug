@@ -23,3 +23,26 @@ pub use sdl3::ttf;
 pub use sdl3::video;
 pub use sprite::Sprite;
 pub use vectors::Vec2d;
+
+/// Creates a texture from a given font and a given text.
+/// `font` - The font to use.
+/// `text` - The text to render.
+/// `color` - The color of the text.
+/// `texture_creator` - The texture creator to use.
+pub fn create_text_texture<'a>(
+    font: &ttf::Font,
+    text: &str,
+    color: &Color,
+    texture_creator: &'a render::TextureCreator<video::WindowContext>,
+) -> Result<render::Texture<'a>, String> {
+    let surface = match font.render(text).blended(*color) {
+        Ok(surface) => surface,
+        Err(e) => return Err(format!("Failed to create surface for text texture: {}", e)),
+    };
+
+    let texture = texture_creator
+        .create_texture_from_surface(&surface)
+        .map_err(|e| format!("Failed to create text texture from surface: {}", e))?;
+
+    Ok(texture)
+}

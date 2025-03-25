@@ -1,4 +1,4 @@
-use frug::{Color, Event, Instance, Keycode, TextureQuery, Vec2d};
+use frug::{create_text_texture, Color, Event, Instance, Keycode, TextureQuery, Vec2d};
 
 fn main() {
     let mut frug_instance = Instance::new("Spritesheet Example", 800, 600);
@@ -24,14 +24,13 @@ fn main() {
     };
 
     // create the text texture
-    let text_texture =
-        match frug_instance.create_text_texture(&font, text, &text_color, &texture_creator) {
-            Ok(texture) => texture,
-            Err(e) => {
-                eprintln!("Failed to create text texture: {}", e);
-                return;
-            }
-        };
+    let text_texture = match create_text_texture(&font, text, &text_color, &texture_creator) {
+        Ok(texture) => texture,
+        Err(e) => {
+            eprintln!("Failed to create text texture: {}", e);
+            return;
+        }
+    };
 
     // get the dimensions of the text texture
     let TextureQuery { width, height, .. } = text_texture.query();
