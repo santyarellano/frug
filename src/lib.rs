@@ -15,6 +15,7 @@ pub use sdl3::image::LoadTexture;
 pub use sdl3::keyboard::Keycode;
 pub use sdl3::pixels::Color;
 pub use sdl3::rect::Rect;
+pub use sdl3::render;
 pub use sdl3::render::ScaleMode;
 pub use sdl3::render::TextureQuery;
 pub use sdl3::ttf;
