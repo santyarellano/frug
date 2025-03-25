@@ -9,6 +9,7 @@ mod sprite;
 mod vectors;
 
 pub use instance::Instance;
+pub use sdl3;
 pub use sdl3::event::Event;
 pub use sdl3::event::EventPollIterator;
 pub use sdl3::image::LoadTexture;
