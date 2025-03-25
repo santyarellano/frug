@@ -19,5 +19,6 @@ pub use sdl3::render;
 pub use sdl3::render::ScaleMode;
 pub use sdl3::render::TextureQuery;
 pub use sdl3::ttf;
+pub use sdl3::video;
 pub use sprite::Sprite;
 pub use vectors::Vec2d;
