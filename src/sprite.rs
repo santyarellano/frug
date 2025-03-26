@@ -3,7 +3,7 @@ use sdl3::render::Texture;
 /// This struct will assume that there is a row per "animation".
 /// `frames_in_rows` will contain the number of frames per each row.
 pub struct Sprite<'a> {
-    pub texture: Texture<'a>,
+    pub texture: &'a Texture<'a>,
     pub rows: u32,
     pub frames_in_rows: Vec<u32>,
     pub drawing_rect: sdl3::rect::Rect,
@@ -14,7 +14,7 @@ pub struct Sprite<'a> {
 impl<'a> Sprite<'a> {
     /// Creates a new sprite with the given texture, rows, frames in rows, width, and height of texture.
     pub fn new(
-        texture: Texture<'a>,
+        texture: &'a Texture<'a>,
         rows: u32,
         frames_in_rows: Vec<u32>,
         width: u32,

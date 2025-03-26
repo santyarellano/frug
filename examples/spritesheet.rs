@@ -23,7 +23,7 @@ fn main() {
     };
     texture.set_scale_mode(ScaleMode::Nearest); // to avoid blurring
 
-    let mut sprite = Sprite::new(texture, 2, vec![6, 4], 52, 50);
+    let mut sprite = Sprite::new(&texture, 2, vec![6, 4], 52, 50);
 
     let sprite_pos = Vec2d { x: 250, y: 150 };
     let sprite_scale = Vec2d { x: 4, y: 4 };
