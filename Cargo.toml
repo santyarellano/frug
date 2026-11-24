@@ -1,6 +1,6 @@
 [package]
 name = "frug"
-version = "0.2.7"
+version = "0.3.0"
 edition = "2021"
 description = "A simple and learnable gamedev library for rust"
 readme = "Readme.md"
@@ -10,5 +10,13 @@ license = "MIT"
 keywords = ["gamedev", "graphics"]
 
 
+[features]
+# By default SDL3, SDL3_image and SDL3_ttf are compiled from bundled source and
+# statically linked, so `cargo add frug` works without installing SDL.
+# To link against a system-installed SDL instead, depend on frug with
+# `default-features = false`.
+default = ["bundled"]
+bundled = ["sdl3/build-from-source-static"]
+
 [dependencies]
-sdl3 = { version = "0.14.16", features = ["image", "ttf"] }
+sdl3 = { version = "0.22", features = ["image", "ttf"] }
