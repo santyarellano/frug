@@ -1,6 +1,6 @@
 [package]
 name = "frug"
-version = "0.2.7"
+version = "0.3.0"
 edition = "2021"
 description = "A simple and learnable gamedev library for rust"
 readme = "Readme.md"
@@ -10,5 +10,21 @@ license = "MIT"
 keywords = ["gamedev", "graphics"]
 
 
+[features]
+# By default SDL3, SDL3_image and SDL3_ttf are compiled from bundled source and
+# statically linked, so `cargo add frug` works without installing SDL.
+# To link against a system-installed SDL instead, depend on frug with
+# `default-features = false`.
+default = ["bundled"]
+bundled = ["sdl3/build-from-source-static"]
+
 [dependencies]
-sdl3 = { version = "0.14.16", features = ["image", "ttf"] }
+sdl3 = { version = "0.22", features = ["image", "ttf"] }
+
+# On Windows, sdl3-ttf-sys builds its bundled HarfBuzz (C++) in CMake's Debug
+# config for debug builds, which links MSVC's debug C runtime while Rust links
+# the release one, so linking fails with `_CrtDbgReport` unresolved. HarfBuzz
+# is only needed for complex scripts (Arabic, Devanagari, Thai, ...), so leave
+# it out on Windows. This merges into the sdl3-ttf-sys that sdl3 already uses.
+[target.'cfg(windows)'.dependencies]
+sdl3-ttf-sys = { version = "0.7.1", default-features = false, features = ["no-sdlttf-harfbuzz"] }
