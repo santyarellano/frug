@@ -1,14 +1,25 @@
 //! FRUG is intended to provide a similar abstraction layer over graphics programming as to how SDL does for C++, meaning that it should provide developers enough control and flexibility to implement their own architectures & design patterns, yet simplifying the process of working with graphics so developers won't have to worry about implementing all the repetitive tasks related to getting things to the screen.
 //!
 //! Please see [the documentation](https://santyarellano.github.io/frug_book/) for more information.
-//!
-//! I'M MIGRATING THIS WHOLE THING FROM WGPU TO SDL3. PLEASE HOLD ON!!!
 
+mod app;
+mod assets;
+mod audio;
+mod font;
+mod input;
 mod instance;
 mod sprite;
+mod timestep;
 mod vectors;
 
-pub use instance::Instance;
+pub use app::{run, Config, Context, Game};
+pub use assets::{Assets, TextureId};
+pub use audio::{Audio, SoundId, Voice};
+pub use font::{BitmapFont, Glyph, HAlign, VAlign};
+pub use input::Input;
+pub use instance::{DrawParams, Instance};
+pub use sdl3::render::{FPoint, FRect};
+pub use timestep::FixedTimestep;
 pub use sdl3;
 pub use sdl3::event::Event;
 pub use sdl3::event::EventPollIterator;
