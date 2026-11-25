@@ -1,6 +1,7 @@
 use sdl3::event::Event;
 use sdl3::pixels::Color;
 use sdl3::rect::Rect;
+use sdl3::render::ClippingRect;
 use sdl3::render::{BlendMode, Canvas, FPoint, FRect, ScaleMode, Texture, TextureCreator};
 use sdl3::sys;
 use sdl3::ttf::Sdl3TtfContext;
@@ -132,10 +133,15 @@ impl Instance {
     /// keeping its aspect ratio (letterboxed). With `integer_scale` only whole multiples are
     /// used, which keeps pixel art crisp. Anything drawn after [`Instance::begin_gui`] is
     /// drawn in window pixels on top.
+    ///
+    /// World drawing is snapped to whole logical pixels, and the camera's fractional part is
+    /// applied when the image is scaled up, so scrolling stays smooth (one window pixel at a
+    /// time) while sprites stay pixel-perfect.
     pub fn set_logical_size(&mut self, width: u32, height: u32, integer_scale: bool) {
+        // One extra row and column to shift into view for sub-pixel camera offsets.
         let mut target = self
             .creator
-            .create_texture_target(None, width, height)
+            .create_texture_target(None, width + 1, height + 1)
             .expect("failed to create logical render target");
         target.set_scale_mode(ScaleMode::Nearest);
         self.logical = Some(Logical {
@@ -216,10 +222,22 @@ impl Instance {
             sys::render::SDL_SetTextureAlphaModFloat(raw, 1.0);
             sys::render::SDL_SetTextureBlendMode(raw, sys::blendmode::SDL_BLENDMODE_NONE);
         }
-        let dst = FRect::new(x, y, l.width as f32 * s, l.height as f32 * s);
+        // Sub-pixel camera: shift the image by the camera's fractional part, in whole
+        // window pixels, and clip to the logical viewport.
+        let fx = ((self.camera.x - self.camera.x.floor()) * s).round();
+        let fy = ((self.camera.y - self.camera.y.floor()) * s).round();
+        let (vw, vh) = (l.width as f32 * s, l.height as f32 * s);
+        self.canvas.set_clip_rect(Rect::new(
+            x.round() as i32,
+            y.round() as i32,
+            vw.round() as u32,
+            vh.round() as u32,
+        ));
+        let dst = FRect::new(x - fx, y - fy, (l.width + 1) as f32 * s, (l.height + 1) as f32 * s);
         if let Err(e) = self.canvas.copy(&l.target, None, dst) {
             eprintln!("Error presenting logical image: {e}");
         }
+        self.canvas.set_clip_rect(ClippingRect::None);
     }
 
     /// `true` between `begin_gui` and the next `clear`.
@@ -236,8 +254,21 @@ impl Instance {
     fn view_offset(&self) -> (f32, f32) {
         if self.in_gui {
             (0.0, 0.0)
+        } else if self.logical.is_some() {
+            // The fractional part is applied when the logical image is scaled up.
+            (self.camera.x.floor(), self.camera.y.floor())
         } else {
             (self.camera.x, self.camera.y)
+        }
+    }
+
+    /// Snap to whole logical pixels while drawing the low-resolution world, so pixel art
+    /// never lands between pixels (which drops or doubles rows and columns).
+    fn snap(&self, v: f32) -> f32 {
+        if self.logical.is_some() && !self.in_gui {
+            v.round()
+        } else {
+            v
         }
     }
 
@@ -255,7 +286,9 @@ impl Instance {
     pub fn fill_rect(&mut self, x: f32, y: f32, w: f32, h: f32, color: Color) {
         let (cx, cy) = self.view_offset();
         self.canvas.set_draw_color(color);
-        let _ = self.canvas.fill_rect(FRect::new(x - cx, y - cy, w, h));
+        let (x0, y0) = (self.snap(x - cx), self.snap(y - cy));
+        let (x1, y1) = (self.snap(x - cx + w), self.snap(y - cy + h));
+        let _ = self.canvas.fill_rect(FRect::new(x0, y0, x1 - x0, y1 - y0));
     }
 
     /// Rectangle outline (1px) with float coordinates. Respects the camera.
@@ -319,7 +352,12 @@ impl Instance {
         // Pivot measured from the destination rect's top-left, after flipping.
         let px = if p.scale.x < 0.0 { src.w - p.origin.x } else { p.origin.x } * sx;
         let py = if p.scale.y < 0.0 { src.h - p.origin.y } else { p.origin.y } * sy;
-        let dst = FRect::new(pos.x - cx - px, pos.y - cy - py, src.w * sx, src.h * sy);
+        let (x0, y0) = (self.snap(pos.x - cx - px), self.snap(pos.y - cy - py));
+        let (x1, y1) = (
+            self.snap(pos.x - cx - px + src.w * sx),
+            self.snap(pos.y - cy - py + src.h * sy),
+        );
+        let dst = FRect::new(x0, y0, x1 - x0, y1 - y0);
 
         let raw = texture.raw();
         unsafe {
@@ -367,6 +405,9 @@ impl Instance {
         h: f32,
         p: &DrawParams,
     ) {
+        // Snap the outer rectangle once so the slices tile without gaps.
+        let (x, y) = (x.round(), y.round());
+        let (w, h) = (w.round(), h.round());
         let b = border;
         let cols = [
             (src.x, b, x, b),
